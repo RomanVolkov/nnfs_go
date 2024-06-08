@@ -26,7 +26,7 @@ func (activation *Activation_ReLU) Forward(inputs *mat.Dense) {
 func (activation *Activation_ReLU) Backward(dvalues *mat.Dense) {
 	activation.DInputs = *mat.DenseCopyOf(dvalues)
 	activation.DInputs.Apply(func(i, j int, v float64) float64 {
-		if v <= 0 {
+		if activation.inputs.At(i, j) <= 0 {
 			return 0
 		}
 		return v
