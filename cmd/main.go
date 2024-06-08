@@ -110,19 +110,19 @@ func dumpDense(values mat.Dense) {
 }
 
 func RunModelV2() {
-	_, targetClasses := dataset.SpiralData(100, 3)
-	xx := dataset.MockSpiralData()
+	x, targetClasses := dataset.SpiralData(100, 3)
+	//	xx := dataset.MockSpiralData()
 
 	dense1 := layer.Layer{}
-	dense1.Initialization(2, 10)
-	dense1.Weights = dataset.MockDense1()
+	dense1.Initialization(2, 64)
+	// dense1.Weights = dataset.MockDense1()
 	fmt.Println("dense1::weights\n", mat.Formatted(&dense1.Weights))
 
 	activation1 := activation.Activation_ReLU{}
 
 	dense2 := layer.Layer{}
-	dense2.Initialization(10, 3)
-	dense2.Weights = dataset.MockDense2()
+	dense2.Initialization(64, 3)
+	// dense2.Weights = dataset.MockDense2()
 	fmt.Println("dense2::weights\n", mat.Formatted(&dense2.Weights))
 
 	lossActivation := classifer.ActivationSoftmaxLossCategorialCrossentropy{}
@@ -131,7 +131,7 @@ func RunModelV2() {
 	numberOfEpochs := 10000
 
 	for epoch := 0; epoch < numberOfEpochs; epoch++ {
-		dense1.Forward(&xx)
+		dense1.Forward(x)
 		activation1.Forward(&dense1.Output)
 		dense2.Forward(&activation1.Output)
 		lossValue := lossActivation.Forward(&dense2.Output, targetClasses)
