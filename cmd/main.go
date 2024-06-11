@@ -47,7 +47,7 @@ func RunModel() {
 	fmt.Println(mat.Formatted(&dense2.DWeights))
 	fmt.Println(mat.Formatted(&dense2.DBiases))
 
-	o := optimizer.NewSGD()
+	o := optimizer.NewSGD(1.0, 1e-3, 0.5)
 	o.UpdateParams(&dense1)
 	o.UpdateParams(&dense2)
 }
@@ -127,7 +127,8 @@ func RunModelV2() {
 
 	lossActivation := classifer.ActivationSoftmaxLossCategorialCrossentropy{}
 
-	o := optimizer.NewSGD()
+	// o := optimizer.NewSGD(1., 1e-3, 0.9)
+	o := optimizer.NewAda(1., 1e-4, 1e-7)
 	numberOfEpochs := 10000
 
 	for epoch := 0; epoch < numberOfEpochs; epoch++ {
@@ -141,6 +142,7 @@ func RunModelV2() {
 			fmt.Println("epoch: ", epoch)
 			fmt.Println("loss: ", lossValue)
 			fmt.Println("accuracy: ", accuracy)
+			fmt.Println("learning rate: ", o.CurrentLearningRate)
 		}
 
 		lossActivation.Backward(&lossActivation.Output, targetClasses)
@@ -148,8 +150,10 @@ func RunModelV2() {
 		activation1.Backward(&dense2.DInputs)
 		dense1.Backward(&activation1.DInputs)
 
+		o.PreUpdate()
 		o.UpdateParams(&dense1)
 		o.UpdateParams(&dense2)
+		o.PostUpdate()
 	}
 }
 

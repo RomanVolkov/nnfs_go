@@ -13,6 +13,14 @@ type Layer struct {
 	DBiases  mat.Dense
 	DInputs  mat.Dense
 
+	// used by SGD optimizer
+	WeightMomentums *mat.Dense
+	BiasMomentums   *mat.Dense
+
+	// used by Ada optimizer
+	WeightCache *mat.Dense
+	BiasCache   *mat.Dense
+
 	// rows - number of inputs from previous Layer
 	// cols - number of neurons within the Layer
 	// each column corresponds to weights of a neuron
