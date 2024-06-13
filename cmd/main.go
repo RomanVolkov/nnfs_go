@@ -128,7 +128,9 @@ func RunModelV2() {
 	lossActivation := classifer.ActivationSoftmaxLossCategorialCrossentropy{}
 
 	// o := optimizer.NewSGD(1., 1e-3, 0.9)
-	o := optimizer.NewAda(1., 1e-4, 1e-7)
+	// o := optimizer.NewAda(1., 1e-4, 1e-7)
+	// o := optimizer.NewRMSprop(0.02, 1e-5, 1e-7, 0.999)
+	o := optimizer.NewAdam(0.05, 5e-7, 1e-7, 0.9, 0.999)
 	numberOfEpochs := 10000
 
 	for epoch := 0; epoch < numberOfEpochs; epoch++ {
@@ -155,6 +157,16 @@ func RunModelV2() {
 		o.UpdateParams(&dense2)
 		o.PostUpdate()
 	}
+
+	// Testing the model
+	testData, testClasses := dataset.SpiralData(100, 3)
+	dense1.Forward(testData)
+	activation1.Forward(&dense1.Output)
+	dense2.Forward(&activation1.Output)
+	validationLoss := lossActivation.Forward(&dense2.Output, testClasses)
+	testAccuracy := loss.CalculateAccuracy(&lossActivation.Output, testClasses)
+
+	fmt.Println("validation: loss", validationLoss, " accuracy: ", testAccuracy)
 }
 
 func main() {
