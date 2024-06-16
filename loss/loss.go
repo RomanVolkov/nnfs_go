@@ -1,6 +1,7 @@
 package loss
 
 import (
+	"main/layer"
 	"math"
 
 	"gonum.org/v1/gonum/floats"
@@ -61,4 +62,40 @@ func (loss *CategoricalCrossentropyLoss) Backward(dvalues mat.Dense, target []ui
 			loss.DInputs.Set(i, j, value)
 		}
 	}
+}
+
+func RegularizationLoss(layer *layer.Layer) float64 {
+	value := 0.0
+
+	if layer.L1.Weight > 0 {
+		temp := 0.0
+		for i := range layer.Weights.RawMatrix().Data {
+			temp += math.Abs(layer.Weights.RawMatrix().Data[i])
+		}
+		value += layer.L1.Weight * temp
+	}
+	if layer.L1.Bias > 0 {
+		temp := 0.0
+		for i := range layer.Biases.RawMatrix().Data {
+			temp += math.Abs(layer.Biases.RawMatrix().Data[i])
+		}
+		value += layer.L1.Bias * temp
+	}
+
+	if layer.L2.Weight > 0 {
+		temp := 0.0
+		for i := range layer.Weights.RawMatrix().Data {
+			temp += math.Pow(layer.Weights.RawMatrix().Data[i], 2)
+		}
+		value += layer.L2.Weight * temp
+	}
+	if layer.L2.Bias > 0 {
+		temp := 0.0
+		for i := range layer.Biases.RawMatrix().Data {
+			temp += math.Pow(layer.Biases.RawMatrix().Data[i], 2)
+		}
+		value += layer.L2.Bias * temp
+	}
+
+	return value
 }

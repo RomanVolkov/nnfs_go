@@ -6,6 +6,10 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+type Regularizer struct {
+	Weight, Bias float64
+}
+
 type Layer struct {
 	inputs mat.Dense
 
@@ -20,6 +24,10 @@ type Layer struct {
 	// used by Ada optimizer
 	WeightCache *mat.Dense
 	BiasCache   *mat.Dense
+
+	// regularization strenght
+	L1 Regularizer
+	L2 Regularizer
 
 	// rows - number of inputs from previous Layer
 	// cols - number of neurons within the Layer
@@ -42,6 +50,9 @@ func (layer *Layer) Initialization(n_inputs int, n_neurons int) {
 	biases := make([]float64, n_neurons)
 	layer.Biases = *mat.NewDense(1, n_neurons, biases)
 	layer.Biases.Zero()
+
+	layer.L1 = Regularizer{0, 0}
+	layer.L2 = Regularizer{0, 0}
 }
 
 func (layer *Layer) Forward(inputs *mat.Dense) {
@@ -67,12 +78,6 @@ func (layer *Layer) Forward(inputs *mat.Dense) {
 }
 
 func (layer *Layer) Backward(dvalues *mat.Dense) {
-	// Gradient on inputs
-	m, _ := dvalues.Dims()
-	_, p := layer.Weights.T().Dims()
-	layer.DInputs = *mat.NewDense(m, p, nil)
-	layer.DInputs.Product(dvalues, layer.Weights.T())
-
 	// Gradients on params
 	_, biasesCols := dvalues.Dims()
 	layer.DBiases = *mat.NewDense(1, biasesCols, nil)
@@ -80,8 +85,56 @@ func (layer *Layer) Backward(dvalues *mat.Dense) {
 		layer.DBiases.Set(0, i, mat.Sum(dvalues.ColView(i)))
 	}
 
-	m, _ = layer.inputs.T().Dims()
-	_, p = dvalues.Dims()
+	m, _ := layer.inputs.T().Dims()
+	_, p := dvalues.Dims()
 	layer.DWeights = *mat.NewDense(m, p, nil)
 	layer.DWeights.Product(layer.inputs.T(), dvalues)
+
+	// Gradients on regularization
+	// L1 on weights
+	if layer.L1.Weight > 0 {
+		dl1 := mat.DenseCopyOf(&layer.Weights)
+		dl1.Apply(func(i, j int, v float64) float64 {
+			if v >= 0.0 {
+				return layer.L1.Weight
+			} else {
+				return -1 * layer.L1.Weight
+			}
+		}, dl1)
+		layer.DWeights.Add(&layer.DWeights, dl1)
+	}
+	// L1 on biases
+	if layer.L1.Bias > 0 {
+		dl1 := mat.DenseCopyOf(&layer.Biases)
+		dl1.Apply(func(i, j int, v float64) float64 {
+			if v >= 0.0 {
+				return layer.L1.Bias
+			} else {
+				return -1 * layer.L1.Bias
+			}
+		}, dl1)
+		layer.DBiases.Add(&layer.DBiases, dl1)
+	}
+	// L2 on weights
+	if layer.L2.Weight > 0 {
+		tmp := mat.DenseCopyOf(&layer.Weights)
+		tmp.Apply(func(i, j int, v float64) float64 {
+			return 2 * layer.L2.Weight * v
+		}, &layer.Weights)
+		layer.DWeights.Add(&layer.DWeights, tmp)
+	}
+	// L2 on biases
+	if layer.L2.Bias > 0 {
+		tmp := mat.DenseCopyOf(&layer.Biases)
+		tmp.Apply(func(i, j int, v float64) float64 {
+			return 2 * layer.L2.Bias * v
+		}, &layer.Biases)
+		layer.DBiases.Add(&layer.DBiases, tmp)
+	}
+
+	// Gradient on inputs
+	m, _ = dvalues.Dims()
+	_, p = layer.Weights.T().Dims()
+	layer.DInputs = *mat.NewDense(m, p, nil)
+	layer.DInputs.Product(dvalues, layer.Weights.T())
 }

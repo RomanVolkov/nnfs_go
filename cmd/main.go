@@ -110,18 +110,19 @@ func dumpDense(values mat.Dense) {
 }
 
 func RunModelV2() {
-	x, targetClasses := dataset.SpiralData(100, 3)
+	x, targetClasses := dataset.SpiralData(1000, 3)
 	//	xx := dataset.MockSpiralData()
 
 	dense1 := layer.Layer{}
-	dense1.Initialization(2, 64)
+	dense1.Initialization(2, 512)
+	dense1.L2 = layer.Regularizer{Weight: 5e-4, Bias: 5e-4}
 	// dense1.Weights = dataset.MockDense1()
 	fmt.Println("dense1::weights\n", mat.Formatted(&dense1.Weights))
 
 	activation1 := activation.Activation_ReLU{}
 
 	dense2 := layer.Layer{}
-	dense2.Initialization(64, 3)
+	dense2.Initialization(512, 3)
 	// dense2.Weights = dataset.MockDense2()
 	fmt.Println("dense2::weights\n", mat.Formatted(&dense2.Weights))
 
@@ -137,11 +138,16 @@ func RunModelV2() {
 		dense1.Forward(x)
 		activation1.Forward(&dense1.Output)
 		dense2.Forward(&activation1.Output)
-		lossValue := lossActivation.Forward(&dense2.Output, targetClasses)
+
+		dataLoss := lossActivation.Forward(&dense2.Output, targetClasses)
 		accuracy := loss.CalculateAccuracy(&lossActivation.Output, targetClasses)
+		regularizationLoss := loss.RegularizationLoss(&dense1) + loss.RegularizationLoss(&dense2)
+		lossValue := dataLoss + regularizationLoss
 
 		if epoch%100 == 0 {
 			fmt.Println("epoch: ", epoch)
+			fmt.Println("data loss: ", dataLoss)
+			fmt.Println("regularization loss: ", regularizationLoss)
 			fmt.Println("loss: ", lossValue)
 			fmt.Println("accuracy: ", accuracy)
 			fmt.Println("learning rate: ", o.CurrentLearningRate)
@@ -163,10 +169,13 @@ func RunModelV2() {
 	dense1.Forward(testData)
 	activation1.Forward(&dense1.Output)
 	dense2.Forward(&activation1.Output)
-	validationLoss := lossActivation.Forward(&dense2.Output, testClasses)
+
+	validationDataLoss := lossActivation.Forward(&dense2.Output, testClasses)
+	validationRegularizationLoss := loss.RegularizationLoss(&dense1) + loss.RegularizationLoss(&dense2)
+	lossValue := validationDataLoss + validationRegularizationLoss
 	testAccuracy := loss.CalculateAccuracy(&lossActivation.Output, testClasses)
 
-	fmt.Println("validation: loss", validationLoss, " accuracy: ", testAccuracy)
+	fmt.Println("validation:", "data loss: ", validationDataLoss, " regularization loss: ", validationRegularizationLoss, " loss: ", lossValue, " accuracy: ", testAccuracy)
 }
 
 func main() {
