@@ -114,15 +114,18 @@ func RunModelV2() {
 	//	xx := dataset.MockSpiralData()
 
 	dense1 := layer.Layer{}
-	dense1.Initialization(2, 512)
+	dense1.Initialization(2, 64)
 	dense1.L2 = layer.Regularizer{Weight: 5e-4, Bias: 5e-4}
 	// dense1.Weights = dataset.MockDense1()
 	fmt.Println("dense1::weights\n", mat.Formatted(&dense1.Weights))
 
 	activation1 := activation.Activation_ReLU{}
 
+	dropout1 := layer.DropoutLayer{}
+	dropout1.Initialization(0.1)
+
 	dense2 := layer.Layer{}
-	dense2.Initialization(512, 3)
+	dense2.Initialization(64, 3)
 	// dense2.Weights = dataset.MockDense2()
 	fmt.Println("dense2::weights\n", mat.Formatted(&dense2.Weights))
 
@@ -131,13 +134,16 @@ func RunModelV2() {
 	// o := optimizer.NewSGD(1., 1e-3, 0.9)
 	// o := optimizer.NewAda(1., 1e-4, 1e-7)
 	// o := optimizer.NewRMSprop(0.02, 1e-5, 1e-7, 0.999)
-	o := optimizer.NewAdam(0.05, 5e-7, 1e-7, 0.9, 0.999)
+	o := optimizer.NewAdam(0.05, 5e-5, 1e-7, 0.9, 0.999)
 	numberOfEpochs := 10000
 
 	for epoch := 0; epoch < numberOfEpochs; epoch++ {
 		dense1.Forward(x)
 		activation1.Forward(&dense1.Output)
-		dense2.Forward(&activation1.Output)
+
+		dropout1.Forward(&activation1.Output)
+
+		dense2.Forward(&dropout1.Output)
 
 		dataLoss := lossActivation.Forward(&dense2.Output, targetClasses)
 		accuracy := loss.CalculateAccuracy(&lossActivation.Output, targetClasses)
@@ -155,7 +161,8 @@ func RunModelV2() {
 
 		lossActivation.Backward(&lossActivation.Output, targetClasses)
 		dense2.Backward(&lossActivation.DInputs)
-		activation1.Backward(&dense2.DInputs)
+		dropout1.Backward(&dense2.DInputs)
+		activation1.Backward(&dropout1.DInputs)
 		dense1.Backward(&activation1.DInputs)
 
 		o.PreUpdate()
