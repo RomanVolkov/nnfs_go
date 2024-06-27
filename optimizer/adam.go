@@ -17,14 +17,14 @@ type OptimizerAdam struct {
 	iterations          int
 }
 
-func NewAdam(learningRate float64, decay float64, epsilon float64, beta1 float64, beta2 float64) OptimizerAdam {
+func NewAdam() OptimizerAdam {
 	return OptimizerAdam{
-		CurrentLearningRate: learningRate,
-		LearningRate:        learningRate,
-		Decay:               decay,
-		Epsilon:             epsilon,
-		Beta1:               beta1,
-		Beta2:               beta2,
+		CurrentLearningRate: 0.001,
+		LearningRate:        0.001,
+		Decay:               0.,
+		Epsilon:             1e-7,
+		Beta1:               0.9,
+		Beta2:               0.999,
 		iterations:          0,
 	}
 }

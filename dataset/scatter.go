@@ -47,3 +47,28 @@ func ScatterData(values *mat.Dense, classes_count int) {
 		panic(err)
 	}
 }
+
+func ScatterSineData(x [][]float64, y [][]float64) {
+	p := plot.New()
+
+	p.Title.Text = "Data"
+	p.X.Label.Text = "X"
+	p.Y.Label.Text = "Y"
+	p.Add(plotter.NewGrid())
+
+	for i := 0; i < len(x); i++ {
+		pts := make(plotter.XYs, len(x[i]))
+		for j := 0; j < len(x[i]); j++ {
+			pts[j].X = x[i][j]
+			pts[j].Y = y[i][j]
+		}
+
+		s, _ := plotter.NewScatter(pts)
+		s.Color = color.RGBA{R: uint8(rand.Intn(255)), B: uint8(rand.Intn(255)), A: uint8(rand.Intn(255))}
+		p.Add(s)
+	}
+
+	if err := p.Save(10*vg.Inch, 10*vg.Inch, "sine.png"); err != nil {
+		panic(err)
+	}
+}

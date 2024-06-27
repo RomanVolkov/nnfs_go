@@ -44,7 +44,7 @@ type Layer struct {
 func (layer *Layer) Initialization(n_inputs int, n_neurons int) {
 	weights := make([]float64, n_inputs*n_neurons)
 	for i := range weights {
-		weights[i] = 0.01 * (rand.Float64() - 0.5) * 2
+		weights[i] = 0.1 * (rand.Float64() - 0.5) * 2
 	}
 	layer.Weights = *mat.NewDense(n_inputs, n_neurons, weights)
 	biases := make([]float64, n_neurons)
