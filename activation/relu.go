@@ -10,6 +10,10 @@ type Activation_ReLU struct {
 	Output  mat.Dense
 }
 
+func (a *Activation_ReLU) Name() string {
+	return "RELU Activation"
+}
+
 func (activation *Activation_ReLU) Forward(inputs *mat.Dense) {
 	activation.inputs = *mat.DenseCopyOf(inputs)
 

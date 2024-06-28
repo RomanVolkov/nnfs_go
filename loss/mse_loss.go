@@ -11,6 +11,10 @@ type MeanSquaredErrorLoss struct {
 	DInputs mat.Dense
 }
 
+func (loss *MeanSquaredErrorLoss) Name() string {
+	return "Mean Squared Error Loss"
+}
+
 func (loss *MeanSquaredErrorLoss) Calculate(prediction *mat.Dense, target []float64) float64 {
 	sampleLosses := loss.Forward(prediction, target)
 	value := floats.Sum(sampleLosses) / float64(len(sampleLosses))

@@ -11,6 +11,10 @@ type SigmoidActivation struct {
 	DInputs mat.Dense
 }
 
+func (a *SigmoidActivation) Name() string {
+	return "Sigmoid Activation"
+}
+
 func (activation *SigmoidActivation) Forward(inputs *mat.Dense) {
 	activation.Output = *mat.DenseCopyOf(inputs)
 	activation.Output.Apply(func(i, j int, v float64) float64 {

@@ -41,7 +41,11 @@ type Layer struct {
 	Output mat.Dense
 }
 
-func (layer *Layer) Initialization(n_inputs int, n_neurons int) {
+func (layer *Layer) Name() string {
+	return "Dense Layer"
+}
+
+func (layer *Layer) Initialization(n_inputs int, n_neurons int) *Layer {
 	weights := make([]float64, n_inputs*n_neurons)
 	for i := range weights {
 		weights[i] = 0.1 * (rand.Float64() - 0.5) * 2
@@ -53,6 +57,7 @@ func (layer *Layer) Initialization(n_inputs int, n_neurons int) {
 
 	layer.L1 = Regularizer{0, 0}
 	layer.L2 = Regularizer{0, 0}
+	return layer
 }
 
 func (layer *Layer) Forward(inputs *mat.Dense) {

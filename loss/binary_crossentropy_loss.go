@@ -11,6 +11,10 @@ type BinaryCrossentropyLoss struct {
 	DInputs mat.Dense
 }
 
+func (loss *BinaryCrossentropyLoss) Name() string {
+	return "Binary Crossentropy Loss"
+}
+
 func (loss *BinaryCrossentropyLoss) Calculate(prediction *mat.Dense, y []uint8) float64 {
 	sampleLosses := loss.Forward(prediction, y)
 	value := floats.Sum(sampleLosses) / float64(len(sampleLosses))

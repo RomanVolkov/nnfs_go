@@ -17,8 +17,13 @@ type DropoutLayer struct {
 	Rate float64
 }
 
-func (layer *DropoutLayer) Initialization(rate float64) {
+func (layer *DropoutLayer) Name() string {
+	return "Dropout Layer"
+}
+
+func (layer *DropoutLayer) Initialization(rate float64) *DropoutLayer {
 	layer.Rate = 1.0 - rate
+	return layer
 }
 
 func (layer *DropoutLayer) Forward(inputs *mat.Dense) {

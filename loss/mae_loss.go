@@ -11,6 +11,10 @@ type MeanAbsoluteErrorLoss struct {
 	DInputs mat.Dense
 }
 
+func (loss *MeanAbsoluteErrorLoss) Name() string {
+	return "Mean Absolute Error Loss"
+}
+
 func (loss *MeanAbsoluteErrorLoss) Calculate(prediction *mat.Dense, target []float64) float64 {
 	sampleLosses := loss.Forward(prediction, target)
 	value := floats.Sum(sampleLosses) / float64(len(sampleLosses))

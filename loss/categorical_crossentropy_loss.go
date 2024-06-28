@@ -12,6 +12,10 @@ type CategoricalCrossentropyLoss struct {
 	DInputs mat.Dense
 }
 
+func (loss *CategoricalCrossentropyLoss) Name() string {
+	return "Categorial Crossentropy Loss"
+}
+
 func (loss *CategoricalCrossentropyLoss) Calculate(prediction *mat.Dense, y []uint8) float64 {
 	sampleLosses := loss.Forward(prediction, y)
 	value := floats.Sum(sampleLosses) / float64(len(sampleLosses))

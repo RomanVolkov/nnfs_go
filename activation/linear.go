@@ -8,6 +8,10 @@ type LinearActivation struct {
 	DInputs mat.Dense
 }
 
+func (a *LinearActivation) Name() string {
+	return "Linear Activation"
+}
+
 func (a *LinearActivation) Forward(inputs *mat.Dense) {
 	a.inputs = *inputs
 	a.Outputs = *inputs

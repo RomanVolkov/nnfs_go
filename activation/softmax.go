@@ -13,6 +13,10 @@ type SoftmaxActivation struct {
 	DInputs mat.Dense
 }
 
+func (a *SoftmaxActivation) Name() string {
+	return "Softmax Activation"
+}
+
 func (activation *SoftmaxActivation) Forward(inputs *mat.Dense) {
 	r, c := inputs.Dims()
 	activation.Output = *mat.NewDense(r, c, nil)

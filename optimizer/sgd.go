@@ -24,6 +24,10 @@ func NewSGD(learningRate float64, decay float64, momentum float64) OptimizerSGD 
 	}
 }
 
+func (a *OptimizerSGD) Name() string {
+	return "SGD Optimizer"
+}
+
 func (optimizer *OptimizerSGD) PreUpdate() {
 	if optimizer.Decay > 0.0 {
 		optimizer.CurrentLearningRate = optimizer.LearningRate * (1.0 / (1.0 + optimizer.Decay*float64(optimizer.iterations)))

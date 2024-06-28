@@ -29,6 +29,10 @@ func NewAdam() OptimizerAdam {
 	}
 }
 
+func (a *OptimizerAdam) Name() string {
+	return "Adam Optimizer"
+}
+
 func (optimizer *OptimizerAdam) PreUpdate() {
 	if optimizer.Decay > 0.0 {
 		optimizer.CurrentLearningRate = optimizer.LearningRate * (1.0 / (1.0 + optimizer.Decay*float64(optimizer.iterations)))

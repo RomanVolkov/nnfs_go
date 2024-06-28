@@ -27,6 +27,10 @@ func NewRMSprop(learningRate float64, decay float64, epsilon float64, rho float6
 	}
 }
 
+func (a *OptimizerRMSprop) Name() string {
+	return "RMSprop Optimizer"
+}
+
 func (optimizer *OptimizerRMSprop) PreUpdate() {
 	if optimizer.Decay > 0.0 {
 		optimizer.CurrentLearningRate = optimizer.LearningRate * (1.0 / (1.0 + optimizer.Decay*float64(optimizer.iterations)))
