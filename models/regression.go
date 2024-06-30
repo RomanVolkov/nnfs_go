@@ -13,7 +13,7 @@ import (
 
 func RunRegressionModel() {
 	x, y := dataset.SineData(1000)
-	data := mat.NewDense(1000, 1, x)
+	data := mat.NewDense(1000, 1, x.RawMatrix().Data)
 
 	dense1 := layer.Layer{}
 	dense1.Initialization(1, 64)
@@ -46,11 +46,11 @@ func RunRegressionModel() {
 		dense3.Forward(&activation2.Output)
 		activation3.Forward(&dense3.Output)
 
-		dataLoss := lossFunction.Calculate(&activation3.Outputs, y)
+		dataLoss := lossFunction.Calculate(&activation3.Output, y)
 		regularizationLoss := loss.RegularizationLoss(&dense1) + loss.RegularizationLoss(&dense2) + loss.RegularizationLoss(&dense3)
 		lossValue := dataLoss + regularizationLoss
 
-		accuracy := loss.CalculateRegressionAccuracy(&activation3.Outputs, y)
+		accuracy := loss.CalculateRegressionAccuracy(&activation3.Output, y)
 
 		if epoch%100 == 0 {
 			fmt.Println("====================")
@@ -62,7 +62,7 @@ func RunRegressionModel() {
 			fmt.Println("learning rate: ", optimizer.CurrentLearningRate)
 		}
 
-		lossFunction.Backward(&activation3.Outputs, y)
+		lossFunction.Backward(&activation3.Output, y)
 		activation3.Backward(&lossFunction.DInputs)
 		dense3.Backward(&activation3.DInputs)
 		activation2.Backward(&dense3.DInputs)
@@ -94,7 +94,7 @@ func RunRegressionModel() {
 	xx[0] = xTest
 
 	yy := make([][]float64, 1)
-	yy[0] = activation3.Outputs.RawMatrix().Data
+	yy[0] = activation3.Output.RawMatrix().Data
 
 	dataset.ScatterSineData(xx, yy)
 }

@@ -1,13 +1,18 @@
 package dataset
 
-import "math"
+import (
+	"math"
 
-func SineData(samples int) ([]float64, []float64) {
+	"gonum.org/v1/gonum/mat"
+)
+
+func SineData(samples int) (mat.Dense, mat.Dense) {
 	x, y := make([]float64, samples), make([]float64, samples)
 	for i := 0; i < samples; i++ {
 		x[i] = float64(i) / float64(samples)
 		y[i] = math.Sin(2 * math.Pi * x[i])
 	}
 
-	return x, y
+	// TODO: define dimentions for Y
+	return *mat.NewDense(samples, 1, x), *mat.NewDense(1, samples, y)
 }

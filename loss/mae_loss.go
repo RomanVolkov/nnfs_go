@@ -8,7 +8,7 @@ import (
 )
 
 type MeanAbsoluteErrorLoss struct {
-	DInputs mat.Dense
+	BaseLoss
 }
 
 func (loss *MeanAbsoluteErrorLoss) Name() string {

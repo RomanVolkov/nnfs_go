@@ -28,3 +28,11 @@ func (activation *SigmoidActivation) Backward(dvalues *mat.Dense) {
 		return v * (1. - activation.Output.At(i, j)) * activation.Output.At(i, j)
 	}, dvalues)
 }
+
+func (a *SigmoidActivation) GetOutput() *mat.Dense {
+	return &a.Output
+}
+
+func (a *SigmoidActivation) GetDInputs() *mat.Dense {
+	return &a.DInputs
+}

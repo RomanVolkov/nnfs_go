@@ -143,3 +143,11 @@ func (layer *Layer) Backward(dvalues *mat.Dense) {
 	layer.DInputs = *mat.NewDense(m, p, nil)
 	layer.DInputs.Product(dvalues, layer.Weights.T())
 }
+
+func (a *Layer) GetOutput() *mat.Dense {
+	return &a.Output
+}
+
+func (a *Layer) GetDInputs() *mat.Dense {
+	return &a.DInputs
+}

@@ -8,7 +8,7 @@ import (
 )
 
 type BinaryCrossentropyLoss struct {
-	DInputs mat.Dense
+	BaseLoss
 }
 
 func (loss *BinaryCrossentropyLoss) Name() string {

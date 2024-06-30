@@ -8,7 +8,7 @@ import (
 )
 
 type MeanSquaredErrorLoss struct {
-	DInputs mat.Dense
+	BaseLoss
 }
 
 func (loss *MeanSquaredErrorLoss) Name() string {

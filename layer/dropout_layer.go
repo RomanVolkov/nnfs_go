@@ -43,3 +43,11 @@ func (layer *DropoutLayer) Backward(dvalues *mat.Dense) {
 	layer.DInputs = *mat.DenseCopyOf(dvalues)
 	layer.DInputs.MulElem(dvalues, &layer.binaryMask)
 }
+
+func (a *DropoutLayer) GetOutput() *mat.Dense {
+	return &a.Output
+}
+
+func (a *DropoutLayer) GetDInputs() *mat.Dense {
+	return &a.DInputs
+}

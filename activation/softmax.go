@@ -85,3 +85,11 @@ func diagflat(values []float64) mat.Dense {
 	}
 	return *result
 }
+
+func (a *SoftmaxActivation) GetOutput() *mat.Dense {
+	return &a.Output
+}
+
+func (a *SoftmaxActivation) GetDInputs() *mat.Dense {
+	return &a.DInputs
+}

@@ -1,8 +1,6 @@
-package model
+package optimizer
 
-import (
-	"main/layer"
-)
+import "main/layer"
 
 type OptimizerInterface interface {
 	Name() string

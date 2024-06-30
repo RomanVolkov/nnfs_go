@@ -36,3 +36,11 @@ func (activation *Activation_ReLU) Backward(dvalues *mat.Dense) {
 		return v
 	}, &activation.DInputs)
 }
+
+func (a *Activation_ReLU) GetOutput() *mat.Dense {
+	return &a.Output
+}
+
+func (a *Activation_ReLU) GetDInputs() *mat.Dense {
+	return &a.DInputs
+}

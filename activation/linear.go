@@ -4,7 +4,7 @@ import "gonum.org/v1/gonum/mat"
 
 type LinearActivation struct {
 	inputs  mat.Dense
-	Outputs mat.Dense
+	Output  mat.Dense
 	DInputs mat.Dense
 }
 
@@ -14,9 +14,17 @@ func (a *LinearActivation) Name() string {
 
 func (a *LinearActivation) Forward(inputs *mat.Dense) {
 	a.inputs = *inputs
-	a.Outputs = *inputs
+	a.Output = *inputs
 }
 
 func (a *LinearActivation) Backward(dvalues *mat.Dense) {
 	a.DInputs = *mat.DenseCopyOf(dvalues)
+}
+
+func (a *LinearActivation) GetOutput() *mat.Dense {
+	return &a.Output
+}
+
+func (a *LinearActivation) GetDInputs() *mat.Dense {
+	return &a.DInputs
 }

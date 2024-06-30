@@ -9,7 +9,7 @@ import (
 )
 
 type CategoricalCrossentropyLoss struct {
-	DInputs mat.Dense
+	BaseLoss
 }
 
 func (loss *CategoricalCrossentropyLoss) Name() string {
