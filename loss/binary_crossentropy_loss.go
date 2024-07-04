@@ -3,7 +3,6 @@ package loss
 import (
 	"math"
 
-	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -13,12 +12,6 @@ type BinaryCrossentropyLoss struct {
 
 func (loss *BinaryCrossentropyLoss) Name() string {
 	return "Binary Crossentropy Loss"
-}
-
-func (loss *BinaryCrossentropyLoss) Calculate(prediction *mat.Dense, y []uint8) float64 {
-	sampleLosses := loss.Forward(prediction, y)
-	value := floats.Sum(sampleLosses) / float64(len(sampleLosses))
-	return value
 }
 
 func (loss *BinaryCrossentropyLoss) Forward(prediction *mat.Dense, target []uint8) []float64 {

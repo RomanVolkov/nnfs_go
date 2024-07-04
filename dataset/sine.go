@@ -14,5 +14,5 @@ func SineData(samples int) (mat.Dense, mat.Dense) {
 	}
 
 	// TODO: define dimentions for Y
-	return *mat.NewDense(samples, 1, x), *mat.NewDense(1, samples, y)
+	return *mat.NewDense(samples, 1, x), *mat.NewDense(samples, 1, y)
 }

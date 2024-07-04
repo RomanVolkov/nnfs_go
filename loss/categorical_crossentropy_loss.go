@@ -4,7 +4,6 @@ import (
 	"main/layer"
 	"math"
 
-	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -14,12 +13,6 @@ type CategoricalCrossentropyLoss struct {
 
 func (loss *CategoricalCrossentropyLoss) Name() string {
 	return "Categorial Crossentropy Loss"
-}
-
-func (loss *CategoricalCrossentropyLoss) Calculate(prediction *mat.Dense, y []uint8) float64 {
-	sampleLosses := loss.Forward(prediction, y)
-	value := floats.Sum(sampleLosses) / float64(len(sampleLosses))
-	return value
 }
 
 func (loss *CategoricalCrossentropyLoss) Forward(prediction *mat.Dense, target []uint8) []float64 {
@@ -35,10 +28,6 @@ func (loss *CategoricalCrossentropyLoss) Forward(prediction *mat.Dense, target [
 		idx := target[i]
 		confidences[i] = predictionClipped.At(i, int(idx))
 	}
-
-	// maybe TODO: implement for target shape == 2
-	// where target instead of having one class will contain
-	// array of classes. E.g., for class == 2 it will be [0, 0, 1]
 
 	negative_log_likelihoods := make([]float64, len(confidences))
 	for i := range confidences {

@@ -36,3 +36,16 @@ func (a *SigmoidActivation) GetOutput() *mat.Dense {
 func (a *SigmoidActivation) GetDInputs() *mat.Dense {
 	return &a.DInputs
 }
+
+func (a *SigmoidActivation) Predictions(outputs *mat.Dense) mat.Dense {
+	prediction := mat.DenseCopyOf(outputs)
+
+	prediction.Apply(func(i, j int, v float64) float64 {
+		if v > 0.5 {
+			return 1.
+		} else {
+			return 0.
+		}
+	}, prediction)
+	return *prediction
+}

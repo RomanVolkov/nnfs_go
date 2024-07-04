@@ -1,6 +1,7 @@
 package activation
 
 import (
+	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -43,4 +44,16 @@ func (a *Activation_ReLU) GetOutput() *mat.Dense {
 
 func (a *Activation_ReLU) GetDInputs() *mat.Dense {
 	return &a.DInputs
+}
+
+func (a *Activation_ReLU) Predictions(outputs *mat.Dense) mat.Dense {
+	r, _ := outputs.Dims()
+	prediction := make([]float64, r)
+
+	for i := 0; i < r; i++ {
+		rowValues := outputs.RawRowView(i)
+		maxIndex := floats.MaxIdx(rowValues)
+		prediction[i] = float64(maxIndex)
+	}
+	return *mat.NewDense(r, 1, prediction)
 }

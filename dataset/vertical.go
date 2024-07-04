@@ -6,6 +6,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+// TODO: fix Y
 func VerticalData(samples int, classes int) (*mat.Dense, []uint8) {
 	x := mat.NewDense(samples*classes, 2, nil)
 	y := make([]uint8, samples*classes)

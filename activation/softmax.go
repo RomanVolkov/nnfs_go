@@ -93,3 +93,7 @@ func (a *SoftmaxActivation) GetOutput() *mat.Dense {
 func (a *SoftmaxActivation) GetDInputs() *mat.Dense {
 	return &a.DInputs
 }
+
+func (a *SoftmaxActivation) Predictions(outputs *mat.Dense) mat.Dense {
+	return *mat.DenseCopyOf(outputs)
+}

@@ -22,7 +22,9 @@ func (a *ActivationSoftmaxLossCategorialCrossentropy) Initialize() {
 func (a *ActivationSoftmaxLossCategorialCrossentropy) Forward(inputs *mat.Dense, y []uint8) float64 {
 	a.activation.Forward(inputs)
 	a.Output = *mat.DenseCopyOf(&a.activation.Output)
-	return a.loss.Calculate(&a.Output, y)
+	// TODO: fix
+	panic("fix")
+	// return loss.CalculateLoss(a, inputs, y)
 }
 
 func (a *ActivationSoftmaxLossCategorialCrossentropy) Backward(dvalues *mat.Dense, y []uint8) {

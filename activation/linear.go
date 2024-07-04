@@ -1,6 +1,8 @@
 package activation
 
-import "gonum.org/v1/gonum/mat"
+import (
+	"gonum.org/v1/gonum/mat"
+)
 
 type LinearActivation struct {
 	inputs  mat.Dense
@@ -27,4 +29,8 @@ func (a *LinearActivation) GetOutput() *mat.Dense {
 
 func (a *LinearActivation) GetDInputs() *mat.Dense {
 	return &a.DInputs
+}
+
+func (a *LinearActivation) Predictions(outputs *mat.Dense) mat.Dense {
+	return *mat.DenseCopyOf(outputs)
 }
