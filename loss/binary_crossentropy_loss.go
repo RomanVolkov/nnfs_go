@@ -14,7 +14,7 @@ func (loss *BinaryCrossentropyLoss) Name() string {
 	return "Binary Crossentropy Loss"
 }
 
-func (loss *BinaryCrossentropyLoss) Forward(prediction *mat.Dense, target []uint8) []float64 {
+func (loss *BinaryCrossentropyLoss) Forward(prediction *mat.Dense, target []float64) []float64 {
 	predictionClipped := mat.DenseCopyOf(prediction)
 	predictionClipped.Apply(func(i, j int, v float64) float64 {
 		minValue := 1e-7
@@ -40,7 +40,7 @@ func (loss *BinaryCrossentropyLoss) Forward(prediction *mat.Dense, target []uint
 	return sampleLosses
 }
 
-func (loss *BinaryCrossentropyLoss) Backward(dvalues *mat.Dense, target []uint8) {
+func (loss *BinaryCrossentropyLoss) Backward(dvalues *mat.Dense, target []float64) {
 	dvaluesClipped := mat.DenseCopyOf(dvalues)
 	dvaluesClipped.Apply(func(i, j int, v float64) float64 {
 		minValue := 1e-7
@@ -57,4 +57,8 @@ func (loss *BinaryCrossentropyLoss) Backward(dvalues *mat.Dense, target []uint8)
 			loss.DInputs.Set(i, j, value)
 		}
 	}
+}
+
+func (loss *BinaryCrossentropyLoss) GetDInputs() *mat.Dense {
+	return &loss.DInputs
 }

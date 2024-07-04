@@ -14,7 +14,6 @@ type BaseLoss struct {
 }
 
 func (loss *BaseLoss) SetLayers(layers []*layer.Layer) {
-	// TODO: ??
 	loss.layers = layers
 }
 

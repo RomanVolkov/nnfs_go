@@ -7,10 +7,9 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// TODO: fix Y
-func SpiralData(samples int, classes int) (*mat.Dense, []uint8) {
+func SpiralData(samples int, classes int) (mat.Dense, mat.Dense) {
 	x := mat.NewDense(samples*classes, 2, nil)
-	y := make([]uint8, samples*classes)
+	y := mat.NewDense(samples*classes, 1, nil)
 
 	for class_number := 0; class_number < classes; class_number++ {
 		r := make([]float64, samples)
@@ -26,8 +25,8 @@ func SpiralData(samples int, classes int) (*mat.Dense, []uint8) {
 			idx := ix - class_number*samples
 			x.Set(ix, 0, r[idx]*math.Sin(t[idx]*2.5))
 			x.Set(ix, 1, r[idx]*math.Cos(t[idx]*2.5))
-			y[ix] = uint8(class_number)
+			y.Set(ix, 0, float64(class_number))
 		}
 	}
-	return x, y
+	return *x, *y
 }
