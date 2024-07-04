@@ -27,3 +27,13 @@ func PrintDense(value *mat.Dense) {
 	fmt.Println(goString)
 	fmt.Println(pythonString)
 }
+
+func CompareDims(lhs *mat.Dense, rhs *mat.Dense) bool {
+	l_r, l_c := lhs.Dims()
+	r_r, r_c := rhs.Dims()
+
+	if l_r != r_r {
+		return false
+	}
+	return l_c == r_c
+}

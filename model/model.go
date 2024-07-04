@@ -21,6 +21,10 @@ type Model struct {
 	accuracy     accuracy.AccuracyInterface
 }
 
+type ModelData struct {
+	X, Y mat.Dense
+}
+
 func (m *Model) Add(layer layer.LayerInterface) {
 	m.layers = append(m.layers, layer)
 }
@@ -93,7 +97,8 @@ func (m *Model) Backward(output mat.Dense, target mat.Dense) {
 	}
 }
 
-func (m *Model) Train(x, y mat.Dense, epochs int, printEvery int) {
+func (m *Model) Train(trainingData ModelData, epochs int, printEvery int, validationData *ModelData) {
+	x, y := trainingData.X, trainingData.Y
 	m.accuracy.Initialization(&y)
 
 	for epoch := 0; epoch < epochs+1; epoch++ {
@@ -107,6 +112,8 @@ func (m *Model) Train(x, y mat.Dense, epochs int, printEvery int) {
 		predictions := m.outputLayerActivation.Predictions(output)
 		accuracy := accuracy.CalculateAccuracy(m.accuracy, &predictions, &y)
 
+		// TODO: do I need this still?
+		// or loss funciton holds refereces to actual data?
 		m.passTrainableLayer()
 
 		m.Backward(*output, y)
@@ -128,5 +135,16 @@ func (m *Model) Train(x, y mat.Dense, epochs int, printEvery int) {
 				"accuracy:", accuracy,
 				"learning rate:", m.optimizer.GetCurrentLearningRate())
 		}
+	}
+
+	if validationData != nil {
+		X_val, Y_val := validationData.X, validationData.Y
+		validationOutput := m.Forward(X_val)
+		// TODO: fix target pass
+		validationLoss := loss.CalculateLoss(m.lossFunction, validationOutput, Y_val.RawMatrix().Data)
+		validationPredictions := m.outputLayerActivation.Predictions(validationOutput)
+		validationAccuracy := accuracy.CalculateAccuracy(m.accuracy, &validationPredictions, &y)
+
+		fmt.Println("validation: ", "loss:", validationLoss, "accuracy:", validationAccuracy)
 	}
 }

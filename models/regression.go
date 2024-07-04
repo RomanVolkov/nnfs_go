@@ -13,14 +13,14 @@ import (
 func RunRegressionModel() {
 	x, y := dataset.SineData(1000)
 
-	model := model.Model{}
+	m := model.Model{}
 
-	model.Add((&layer.Layer{}).Initialization(1, 64))
-	model.Add(&activation.Activation_ReLU{})
-	model.Add((&layer.Layer{}).Initialization(64, 64))
-	model.Add(&activation.Activation_ReLU{})
-	model.Add((&layer.Layer{}).Initialization(64, 1))
-	model.Add(&activation.LinearActivation{})
+	m.Add((&layer.Layer{}).Initialization(1, 64))
+	m.Add(&activation.Activation_ReLU{})
+	m.Add((&layer.Layer{}).Initialization(64, 64))
+	m.Add(&activation.Activation_ReLU{})
+	m.Add((&layer.Layer{}).Initialization(64, 1))
+	m.Add(&activation.LinearActivation{})
 
 	lossF := loss.MeanSquaredErrorLoss{}
 	o := optimizer.NewAdam()
@@ -30,10 +30,10 @@ func RunRegressionModel() {
 
 	accuracy := accuracy.RegressionAccuracy{}
 
-	model.Set(&lossF, &o, &accuracy)
-	model.Description()
+	m.Set(&lossF, &o, &accuracy)
+	m.Description()
 
-	model.Finalize()
+	m.Finalize()
 
-	model.Train(x, y, 10000, 100)
+	m.Train(model.ModelData{X: x, Y: y}, 10000, 100, nil)
 }
