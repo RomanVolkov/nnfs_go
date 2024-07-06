@@ -13,7 +13,7 @@ func (layer *InputLayer) Name() string {
 	return "Input Layer"
 }
 
-func (layer *InputLayer) Forward(inputs *mat.Dense) {
+func (layer *InputLayer) Forward(inputs *mat.Dense, isTraining bool) {
 	layer.Output = *inputs
 }
 

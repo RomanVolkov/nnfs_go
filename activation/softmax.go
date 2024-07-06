@@ -17,7 +17,7 @@ func (a *SoftmaxActivation) Name() string {
 	return "Softmax Activation"
 }
 
-func (activation *SoftmaxActivation) Forward(inputs *mat.Dense) {
+func (activation *SoftmaxActivation) Forward(inputs *mat.Dense, isTraining bool) {
 	r, c := inputs.Dims()
 	activation.Output = *mat.NewDense(r, c, nil)
 	for i := 0; i < r; i++ {

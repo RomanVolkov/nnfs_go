@@ -15,7 +15,7 @@ func (a *Activation_ReLU) Name() string {
 	return "RELU Activation"
 }
 
-func (activation *Activation_ReLU) Forward(inputs *mat.Dense) {
+func (activation *Activation_ReLU) Forward(inputs *mat.Dense, isTraining bool) {
 	activation.inputs = *mat.DenseCopyOf(inputs)
 
 	activation.Output = *mat.DenseCopyOf(inputs)

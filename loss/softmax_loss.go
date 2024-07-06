@@ -1,8 +1,7 @@
-package classifer
+package loss
 
 import (
 	"main/activation"
-	"main/loss"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -10,17 +9,17 @@ import (
 type ActivationSoftmaxLossCategorialCrossentropy struct {
 	Output     mat.Dense
 	activation activation.SoftmaxActivation
-	loss       loss.CategoricalCrossentropyLoss
+	loss       CategoricalCrossentropyLoss
 	DInputs    mat.Dense
 }
 
 func (a *ActivationSoftmaxLossCategorialCrossentropy) Initialize() {
 	a.activation = activation.SoftmaxActivation{}
-	a.loss = loss.CategoricalCrossentropyLoss{}
+	a.loss = CategoricalCrossentropyLoss{}
 }
 
 func (a *ActivationSoftmaxLossCategorialCrossentropy) Forward(inputs *mat.Dense, y []uint8) float64 {
-	a.activation.Forward(inputs)
+	a.activation.Forward(inputs, false)
 	a.Output = *mat.DenseCopyOf(&a.activation.Output)
 	// TODO: fix
 	panic("fix")

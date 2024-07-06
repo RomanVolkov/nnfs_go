@@ -26,8 +26,14 @@ func (layer *DropoutLayer) Initialization(rate float64) *DropoutLayer {
 	return layer
 }
 
-func (layer *DropoutLayer) Forward(inputs *mat.Dense) {
+func (layer *DropoutLayer) Forward(inputs *mat.Dense, isTraining bool) {
 	layer.inputs = *inputs
+
+	// if not in the training mode
+	if !isTraining {
+		layer.Output = *mat.DenseCopyOf(inputs)
+		return
+	}
 
 	layer.binaryMask = *mat.DenseCopyOf(inputs)
 	src := rand.New(rand.NewSource(1))

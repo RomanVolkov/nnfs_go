@@ -69,14 +69,14 @@ func (m *Model) Description() {
 	fmt.Println(m.optimizer.Name())
 }
 
-func (m *Model) Forward(input mat.Dense) *mat.Dense {
-	m.inputLayer.Forward(&input)
+func (m *Model) Forward(input mat.Dense, isTraining bool) *mat.Dense {
+	m.inputLayer.Forward(&input, isTraining)
 
 	for i, layer := range m.layers {
 		if i == 0 {
-			layer.Forward(m.inputLayer.GetOutput())
+			layer.Forward(m.inputLayer.GetOutput(), isTraining)
 		} else {
-			layer.Forward(m.layers[i-1].GetOutput())
+			layer.Forward(m.layers[i-1].GetOutput(), isTraining)
 		}
 	}
 
@@ -102,7 +102,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, printEvery int, valida
 	m.accuracy.Initialization(&y)
 
 	for epoch := 0; epoch < epochs+1; epoch++ {
-		output := m.Forward(x)
+		output := m.Forward(x, true)
 
 		// TODO: fix target pass
 		dataLoss := loss.CalculateLoss(m.lossFunction, output, y.RawMatrix().Data)
@@ -139,7 +139,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, printEvery int, valida
 
 	if validationData != nil {
 		X_val, Y_val := validationData.X, validationData.Y
-		validationOutput := m.Forward(X_val)
+		validationOutput := m.Forward(X_val, false)
 		// TODO: fix target pass
 		validationLoss := loss.CalculateLoss(m.lossFunction, validationOutput, Y_val.RawMatrix().Data)
 		validationPredictions := m.outputLayerActivation.Predictions(validationOutput)

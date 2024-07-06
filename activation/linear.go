@@ -14,7 +14,7 @@ func (a *LinearActivation) Name() string {
 	return "Linear Activation"
 }
 
-func (a *LinearActivation) Forward(inputs *mat.Dense) {
+func (a *LinearActivation) Forward(inputs *mat.Dense, isTraining bool) {
 	a.inputs = *inputs
 	a.Output = *inputs
 }

@@ -15,7 +15,7 @@ func (a *SigmoidActivation) Name() string {
 	return "Sigmoid Activation"
 }
 
-func (activation *SigmoidActivation) Forward(inputs *mat.Dense) {
+func (activation *SigmoidActivation) Forward(inputs *mat.Dense, isTraining bool) {
 	activation.Output = *mat.DenseCopyOf(inputs)
 	activation.Output.Apply(func(i, j int, v float64) float64 {
 		return 1. / (1. + math.Exp(-1*v))

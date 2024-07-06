@@ -60,7 +60,7 @@ func (layer *Layer) Initialization(n_inputs int, n_neurons int) *Layer {
 	return layer
 }
 
-func (layer *Layer) Forward(inputs *mat.Dense) {
+func (layer *Layer) Forward(inputs *mat.Dense, isTraining bool) {
 	layer.inputs = *mat.DenseCopyOf(inputs)
 	// number_rows is equal to input sample size
 	number_rows, _ := inputs.Dims()
