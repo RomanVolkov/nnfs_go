@@ -13,6 +13,5 @@ func SineData(samples int) (mat.Dense, mat.Dense) {
 		y[i] = math.Sin(2 * math.Pi * x[i])
 	}
 
-	// TODO: define dimentions for Y
 	return *mat.NewDense(samples, 1, x), *mat.NewDense(samples, 1, y)
 }

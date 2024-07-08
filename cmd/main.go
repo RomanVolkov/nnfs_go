@@ -6,6 +6,5 @@ import (
 
 func main() {
 	// models.RunRegressionModel()
-
 	models.RunBinaryModel()
 }

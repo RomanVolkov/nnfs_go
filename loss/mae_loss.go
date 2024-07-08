@@ -1,6 +1,7 @@
 package loss
 
 import (
+	"main/utils"
 	"math"
 
 	"gonum.org/v1/gonum/mat"
@@ -16,24 +17,30 @@ func (loss *MeanAbsoluteErrorLoss) Name() string {
 
 // predictions has one value for the sample
 // this is why target is single-dim array
-func (loss *MeanAbsoluteErrorLoss) Forward(prediction *mat.Dense, target []float64) []float64 {
-	result := make([]float64, len(target))
+func (loss *MeanAbsoluteErrorLoss) Forward(prediction *mat.Dense, target *mat.Dense) []float64 {
+	if !utils.CompareDims(prediction, target) {
+		panic("incorrect dimentions")
+	}
+	rows, cols := prediction.Dims()
 
-	data := prediction.RawMatrix().Data
-
-	for i, item := range data {
-		result[i] = math.Abs(target[i] - item)
+	result := make([]float64, rows)
+	for i := range result {
+		sum := 0.
+		for j := 0; j < cols; j++ {
+			sum += math.Abs(prediction.At(i, j) - target.At(i, j))
+		}
+		result[i] = sum / float64(cols)
 	}
 
 	return result
 }
 
-func (loss *MeanAbsoluteErrorLoss) Backward(dvalues *mat.Dense, target []float64) {
+func (loss *MeanAbsoluteErrorLoss) Backward(dvalues *mat.Dense, target *mat.Dense) {
 	sampleCount, outputCount := dvalues.Dims()
 
 	loss.DInputs = *mat.DenseCopyOf(dvalues)
 	loss.DInputs.Apply(func(i, j int, v float64) float64 {
-		return sign(target[i]-dvalues.At(i, j)) / float64(outputCount) / float64(sampleCount)
+		return sign(target.At(i, j)-dvalues.At(i, j)) / float64(outputCount) / float64(sampleCount)
 	}, &loss.DInputs)
 }
 

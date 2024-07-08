@@ -84,8 +84,7 @@ func (m *Model) Forward(input mat.Dense, isTraining bool) *mat.Dense {
 }
 
 func (m *Model) Backward(output mat.Dense, target mat.Dense) {
-	// TODO: fix target pass
-	m.lossFunction.Backward(&output, target.RawMatrix().Data)
+	m.lossFunction.Backward(&output, &target)
 
 	for k := range m.layers {
 		i := len(m.layers) - 1 - k
@@ -104,8 +103,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, printEvery int, valida
 	for epoch := 0; epoch < epochs+1; epoch++ {
 		output := m.Forward(x, true)
 
-		// TODO: fix target pass
-		dataLoss := loss.CalculateLoss(m.lossFunction, output, y.RawMatrix().Data)
+		dataLoss := loss.CalculateLoss(m.lossFunction, output, &y)
 		regularizationLoss := m.lossFunction.RegularizationLoss()
 		lossValue := dataLoss + regularizationLoss
 
@@ -140,8 +138,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, printEvery int, valida
 	if validationData != nil {
 		X_val, Y_val := validationData.X, validationData.Y
 		validationOutput := m.Forward(X_val, false)
-		// TODO: fix target pass
-		validationLoss := loss.CalculateLoss(m.lossFunction, validationOutput, Y_val.RawMatrix().Data)
+		validationLoss := loss.CalculateLoss(m.lossFunction, validationOutput, &Y_val)
 		validationPredictions := m.outputLayerActivation.Predictions(validationOutput)
 		validationAccuracy := accuracy.CalculateAccuracy(m.accuracy, &validationPredictions, &y)
 

@@ -14,7 +14,8 @@ func (loss *BinaryCrossentropyLoss) Name() string {
 	return "Binary Crossentropy Loss"
 }
 
-func (loss *BinaryCrossentropyLoss) Forward(prediction *mat.Dense, target []float64) []float64 {
+func (loss *BinaryCrossentropyLoss) Forward(prediction *mat.Dense, target *mat.Dense) []float64 {
+	rows, cols := prediction.Dims()
 	predictionClipped := mat.DenseCopyOf(prediction)
 	predictionClipped.Apply(func(i, j int, v float64) float64 {
 		minValue := 1e-7
@@ -24,23 +25,22 @@ func (loss *BinaryCrossentropyLoss) Forward(prediction *mat.Dense, target []floa
 
 	tmp := mat.DenseCopyOf(predictionClipped)
 	tmp.Apply(func(i, j int, v float64) float64 {
-		return -1.0 * (float64(target[i])*math.Log(v) + (1.0-float64(target[i]))*math.Log(1.0-v))
+		return -1.0 * (target.At(i, j)*math.Log(v) + (1.0-target.At(i, j))*math.Log(1.0-v))
 	}, tmp)
 
-	sampleLosses := make([]float64, len(target))
-	r, c := tmp.Dims()
-	for i := 0; i < r; i++ {
+	sampleLosses := make([]float64, rows)
+	for i := 0; i < rows; i++ {
 		sum := 0.0
-		for j := 0; j < c; j++ {
+		for j := 0; j < cols; j++ {
 			sum += tmp.At(i, j)
 		}
-		sampleLosses[i] = sum / float64(c)
+		sampleLosses[i] = sum / float64(cols)
 	}
 
 	return sampleLosses
 }
 
-func (loss *BinaryCrossentropyLoss) Backward(dvalues *mat.Dense, target []float64) {
+func (loss *BinaryCrossentropyLoss) Backward(dvalues *mat.Dense, target *mat.Dense) {
 	dvaluesClipped := mat.DenseCopyOf(dvalues)
 	dvaluesClipped.Apply(func(i, j int, v float64) float64 {
 		minValue := 1e-7
@@ -53,7 +53,9 @@ func (loss *BinaryCrossentropyLoss) Backward(dvalues *mat.Dense, target []float6
 	loss.DInputs = *mat.NewDense(sampleCount, outputsCount, nil)
 	for i := 0; i < sampleCount; i++ {
 		for j := 0; j < outputsCount; j++ {
-			value := -(float64(target[i])/dvalues.At(i, j) - float64(1-target[i])/(1.0-dvalues.At(i, j))) / float64(outputsCount) / float64(sampleCount)
+			value := -(target.At(i, j)/dvaluesClipped.At(i, j) - (1.0-target.At(i, j))/(1.0-dvaluesClipped.At(i, j)))
+			value /= float64(outputsCount)
+			value /= float64(sampleCount)
 			loss.DInputs.Set(i, j, value)
 		}
 	}

@@ -17,7 +17,7 @@ func (loss *BaseLoss) SetLayers(layers []*layer.Layer) {
 	loss.layers = layers
 }
 
-func CalculateLoss(loss LossInterface, prediction *mat.Dense, target []float64) float64 {
+func CalculateLoss(loss LossInterface, prediction *mat.Dense, target *mat.Dense) float64 {
 	sampleLosses := loss.Forward(prediction, target)
 	value := floats.Sum(sampleLosses) / float64(len(sampleLosses))
 	return value

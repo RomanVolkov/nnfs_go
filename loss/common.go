@@ -10,7 +10,7 @@ type LossInterface interface {
 	Name() string
 	GetDInputs() *mat.Dense
 	SetLayers(layers []*layer.Layer)
-	Forward(prediction *mat.Dense, target []float64) []float64
-	Backward(dvalues *mat.Dense, target []float64)
+	Forward(prediction *mat.Dense, target *mat.Dense) []float64
+	Backward(dvalues *mat.Dense, target *mat.Dense)
 	RegularizationLoss() float64
 }
