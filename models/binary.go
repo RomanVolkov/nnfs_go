@@ -27,7 +27,7 @@ func RunBinaryModel() {
 	l := loss.BinaryCrossentropyLoss{}
 	o := optimizer.NewAdam()
 	o.Decay = 5e-7
-	a := accuracy.CategorialAccuracy{}
+	a := accuracy.BinaryCategorialAccuracy{}
 
 	m.Set(&l, &o, &a)
 
