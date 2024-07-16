@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"log"
 	"main/dataset"
-
-	"gonum.org/v1/gonum/mat"
+	// "gonum.org/v1/gonum/mat"
 )
 
 func main() {
@@ -38,12 +37,11 @@ func main() {
 	// fmt.Println(img.At(10, 10))
 
 	d := dataset.FashionMNISTDataset{}
-	data, target, error := d.TrainingDataset()
+	_, target, error := d.TrainingDataset()
 	if error != nil {
 		log.Fatal(error)
 	}
 
-	fmt.Println(mat.Formatted(target))
-	fmt.Println(mat.Formatted(data.RowView(10)))
+	fmt.Println(target.At(10, 0))
 
 }

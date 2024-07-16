@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"image/png"
 	"io/fs"
+	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
@@ -69,11 +70,12 @@ func (f *FashionMNISTDataset) loadDataset(datasetPath string) (*mat.Dense, *mat.
 	dataLen := len(imagesData[0])
 	resultData := mat.NewDense(imagesCount, dataLen, nil)
 	resultLabels := mat.NewDense(imagesCount, 1, nil)
+	shuffledIndexes := shuffled(makeRange(imagesCount))
 
 	for i := 0; i < imagesCount; i++ {
-		resultLabels.Set(i, 0, labels[i])
-		resultData.SetRow(i, imagesData[i])
-
+		idx := shuffledIndexes[i]
+		resultLabels.Set(idx, 0, labels[i])
+		resultData.SetRow(idx, imagesData[i])
 	}
 
 	return resultData, resultLabels, nil
@@ -110,4 +112,21 @@ func (f *FashionMNISTDataset) loadImage(path string) ([]float64, error) {
 	}
 
 	return data, nil
+}
+
+func makeRange(lenght int) []int {
+	values := make([]int, lenght)
+	for i := 0; i < lenght; i++ {
+		values[i] = i
+	}
+	return values
+}
+
+func shuffled(values []int) []int {
+	shuffled := make([]int, len(values))
+	copy(shuffled, values)
+	rand.Shuffle(len(shuffled), func(i, j int) {
+		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+	})
+	return shuffled
 }
