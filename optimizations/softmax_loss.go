@@ -68,6 +68,14 @@ func (loss *OptimizedCategoricalCrossentropyLoss) RegularizationLoss() float64 {
 	return loss.loss.RegularizationLoss()
 }
 
+func (loss *OptimizedCategoricalCrossentropyLoss) AddAccumulated(lossSumm float64, count int64) {
+	loss.loss.AddAccumulated(lossSumm, count)
+}
+
+func (loss *OptimizedCategoricalCrossentropyLoss) ResetAccumulated() {
+	loss.loss.ResetAccumulated()
+}
+
 // Factory
 
 func MakeOptimizedCategorialCrossentropy() (OptimizedSoftmaxActivation, OptimizedCategoricalCrossentropyLoss) {

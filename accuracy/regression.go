@@ -8,6 +8,7 @@ import (
 )
 
 type RegressionAccuracy struct {
+	BaseAccuracy
 	precision float64
 }
 

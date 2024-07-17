@@ -9,8 +9,10 @@ import (
 )
 
 type BaseLoss struct {
-	DInputs mat.Dense
-	layers  []*layer.Layer
+	DInputs            mat.Dense
+	layers             []*layer.Layer
+	accumulatedLossSum float64
+	accumulatedCount   int64
 }
 
 func (loss *BaseLoss) SetLayers(layers []*layer.Layer) {
@@ -20,7 +22,34 @@ func (loss *BaseLoss) SetLayers(layers []*layer.Layer) {
 func CalculateLoss(loss LossInterface, prediction *mat.Dense, target *mat.Dense) float64 {
 	sampleLosses := loss.Forward(prediction, target)
 	value := floats.Sum(sampleLosses) / float64(len(sampleLosses))
+
+	accumulatedLossSum := floats.Sum(sampleLosses)
+	accumulatedCount := len(sampleLosses)
+	loss.AddAccumulated(accumulatedLossSum, int64(accumulatedCount))
+
 	return value
+}
+
+func (loss *BaseLoss) AddAccumulated(lossSumm float64, count int64) {
+	loss.accumulatedCount += count
+	loss.accumulatedLossSum += lossSumm
+}
+
+func (loss *BaseLoss) CalculateAccumulatedLoss() float64 {
+	return loss.accumulatedLossSum / float64(loss.accumulatedCount)
+}
+
+func (loss *BaseLoss) ResetAccumulated() {
+	loss.accumulatedCount = 0
+	loss.accumulatedLossSum = 0.0
+}
+
+func (loss *BaseLoss) GetAccumulatedLossSum() float64 {
+	return loss.accumulatedLossSum
+}
+
+func (loss *BaseLoss) GetAccumulatedCount() int64 {
+	return loss.accumulatedCount
 }
 
 func (loss *BaseLoss) RegularizationLoss() float64 {

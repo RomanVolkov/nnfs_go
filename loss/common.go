@@ -13,4 +13,6 @@ type LossInterface interface {
 	Forward(prediction *mat.Dense, target *mat.Dense) []float64
 	Backward(dvalues *mat.Dense, target *mat.Dense)
 	RegularizationLoss() float64
+	AddAccumulated(lossSumm float64, count int64)
+	ResetAccumulated()
 }

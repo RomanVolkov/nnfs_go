@@ -6,7 +6,9 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type BinaryCategorialAccuracy struct{}
+type BinaryCategorialAccuracy struct {
+	BaseAccuracy
+}
 
 func (r *BinaryCategorialAccuracy) Initialization(target *mat.Dense) {}
 
