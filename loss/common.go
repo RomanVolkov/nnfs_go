@@ -14,5 +14,6 @@ type LossInterface interface {
 	Backward(dvalues *mat.Dense, target *mat.Dense)
 	RegularizationLoss() float64
 	AddAccumulated(lossSumm float64, count int64)
+	CalculateAccumulatedLoss() float64
 	ResetAccumulated()
 }

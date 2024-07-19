@@ -37,3 +37,11 @@ func CompareDims(lhs *mat.Dense, rhs *mat.Dense) bool {
 	}
 	return l_c == r_c
 }
+
+func MakeRange(size int) []int {
+	indexes := make([]int, size)
+	for i := 0; i < size; i++ {
+		indexes[i] = i
+	}
+	return indexes
+}

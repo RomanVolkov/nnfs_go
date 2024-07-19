@@ -7,6 +7,7 @@ import (
 	"main/layer"
 	"main/loss"
 	"main/optimizer"
+	"main/utils"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -96,52 +97,120 @@ func (m *Model) Backward(output mat.Dense, target mat.Dense) {
 	}
 }
 
-func (m *Model) Train(trainingData ModelData, epochs int, printEvery int, validationData *ModelData) {
+func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printEvery int, validationData *ModelData) {
 	x, y := trainingData.X, trainingData.Y
 	m.accuracy.Initialization(&y)
 
+	// default value if batch size is nil
+	trainSteps := 1
+	validationSteps := 1
+
+	// calculate steps based on data lenght and batch size
+	if batchSize != nil {
+		count, _ := trainingData.X.Dims()
+		trainSteps = count / *batchSize
+		if trainSteps**batchSize < count {
+			trainSteps += 1
+		}
+
+		if validationData != nil {
+			count, _ = validationData.X.Dims()
+			validationSteps = count / *batchSize
+			if validationSteps**batchSize < count {
+				validationSteps += 1
+			}
+		}
+	}
+
 	for epoch := 0; epoch < epochs+1; epoch++ {
-		output := m.Forward(x, true)
+		fmt.Println("Epoch", epoch)
 
-		dataLoss := loss.CalculateLoss(m.lossFunction, output, &y)
-		regularizationLoss := m.lossFunction.RegularizationLoss()
-		lossValue := dataLoss + regularizationLoss
+		m.lossFunction.ResetAccumulated()
+		m.accuracy.ResetAccumulated()
 
-		predictions := m.outputLayerActivation.Predictions(output)
-		accuracy := accuracy.CalculateAccuracy(m.accuracy, &predictions, &y)
+		for _, step := range utils.MakeRange(trainSteps) {
+			var batchX mat.Dense
+			var batchY mat.Dense
+			if batchSize == nil {
+				batchX = x
+				batchY = y
+			} else {
+				_, cols := x.Dims()
+				batchX = *mat.DenseCopyOf(x.Slice(step**batchSize, (step+1)**batchSize, 0, cols-1))
+				_, cols = y.Dims()
+				batchY = *mat.DenseCopyOf(y.Slice(step**batchSize, (step+1)**batchSize, 0, cols-1))
+			}
 
-		// TODO: do I need this still?
-		// or loss funciton holds refereces to actual data?
-		m.passTrainableLayer()
+			output := m.Forward(batchX, true)
 
-		m.Backward(*output, y)
+			dataLoss := loss.CalculateLoss(m.lossFunction, output, &batchY)
+			regularizationLoss := m.lossFunction.RegularizationLoss()
+			lossValue := dataLoss + regularizationLoss
 
-		m.optimizer.PreUpdate()
-		for _, item := range m.layers {
-			layer, ok := item.(*layer.Layer)
-			if ok {
-				m.optimizer.UpdateParams(layer)
+			predictions := m.outputLayerActivation.Predictions(output)
+			accuracy := accuracy.CalculateAccuracy(m.accuracy, &predictions, &batchY)
+
+			// TODO: do I need this still?
+			// or loss funciton holds refereces to actual data?
+			m.passTrainableLayer()
+
+			m.Backward(*output, batchY)
+
+			m.optimizer.PreUpdate()
+			for _, item := range m.layers {
+				layer, ok := item.(*layer.Layer)
+				if ok {
+					m.optimizer.UpdateParams(layer)
+				}
+			}
+
+			m.optimizer.PostUpdate()
+
+			if step%printEvery == 0 || step == trainSteps-1 {
+				fmt.Println("step:", step, "\n",
+					"loss:", lossValue,
+					"(data loss:", dataLoss, "reg loss:", regularizationLoss, ") ",
+					"acc:", accuracy,
+					"lr", m.optimizer.GetCurrentLearningRate())
 			}
 		}
 
-		m.optimizer.PostUpdate()
-
-		if epoch%printEvery == 0 {
-			fmt.Println("epoch:", epoch, "\n",
-				"loss:", lossValue,
-				"(data loss:", dataLoss, "regularization loss:", regularizationLoss, ") ",
-				"accuracy:", accuracy,
-				"learning rate:", m.optimizer.GetCurrentLearningRate())
-		}
+		epochDataLoss := m.lossFunction.CalculateAccumulatedLoss()
+		epochRegularisationLoss := m.lossFunction.RegularizationLoss()
+		epochLoss := epochDataLoss + epochRegularisationLoss
+		epochAccuracy := m.accuracy.CalculateAccumulatedAccuracy()
+		fmt.Println("training, ",
+			"loss:", epochLoss,
+			"(data loss:", epochDataLoss, "reg loss:", epochRegularisationLoss, ") ",
+			"acc:", epochAccuracy,
+			"lr", m.optimizer.GetCurrentLearningRate())
 	}
 
 	if validationData != nil {
 		X_val, Y_val := validationData.X, validationData.Y
-		validationOutput := m.Forward(X_val, false)
-		validationLoss := loss.CalculateLoss(m.lossFunction, validationOutput, &Y_val)
-		validationPredictions := m.outputLayerActivation.Predictions(validationOutput)
-		validationAccuracy := accuracy.CalculateAccuracy(m.accuracy, &validationPredictions, &y)
+		m.lossFunction.ResetAccumulated()
+		m.accuracy.ResetAccumulated()
 
-		fmt.Println("validation: ", "loss:", validationLoss, "accuracy:", validationAccuracy)
+		for _, step := range utils.MakeRange(validationSteps) {
+
+			var batchX mat.Dense
+			var batchY mat.Dense
+			if batchSize == nil {
+				batchX = X_val
+				batchY = Y_val
+			} else {
+				_, cols := x.Dims()
+				batchX = *mat.DenseCopyOf(X_val.Slice(step**batchSize, (step+1)**batchSize, 0, cols-1))
+				_, cols = y.Dims()
+				batchY = *mat.DenseCopyOf(Y_val.Slice(step**batchSize, (step+1)**batchSize, 0, cols-1))
+			}
+			validationOutput := m.Forward(batchX, false)
+			loss.CalculateLoss(m.lossFunction, validationOutput, &batchY)
+			validationPredictions := m.outputLayerActivation.Predictions(validationOutput)
+			accuracy.CalculateAccuracy(m.accuracy, &validationPredictions, &batchY)
+		}
+		valLoss := m.lossFunction.CalculateAccumulatedLoss()
+		valAccuracy := m.accuracy.CalculateAccumulatedAccuracy()
+		fmt.Println("validation: ", "loss:", valLoss, "accuracy:", valAccuracy)
 	}
 }

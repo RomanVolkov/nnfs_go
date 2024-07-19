@@ -38,5 +38,5 @@ func RunCategorialModel() {
 	m.Set(&l, &o, &a)
 
 	m.Finalize()
-	m.Train(model.ModelData{X: x, Y: y}, 10000, 100, &model.ModelData{X: x_val, Y: y_val})
+	m.Train(model.ModelData{X: x, Y: y}, 10000, nil, 100, &model.ModelData{X: x_val, Y: y_val})
 }

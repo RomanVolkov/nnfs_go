@@ -35,5 +35,5 @@ func RunRegressionModel() {
 
 	m.Finalize()
 
-	m.Train(model.ModelData{X: x, Y: y}, 10000, 100, nil)
+	m.Train(model.ModelData{X: x, Y: y}, 10000, nil, 100, nil)
 }
