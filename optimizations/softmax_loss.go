@@ -76,6 +76,10 @@ func (loss *OptimizedCategoricalCrossentropyLoss) ResetAccumulated() {
 	loss.loss.ResetAccumulated()
 }
 
+func (loss *OptimizedCategoricalCrossentropyLoss) CalculateAccumulatedLoss() float64 {
+	return loss.loss.CalculateAccumulatedLoss()
+}
+
 // Factory
 
 func MakeOptimizedCategorialCrossentropy() (OptimizedSoftmaxActivation, OptimizedCategoricalCrossentropyLoss) {

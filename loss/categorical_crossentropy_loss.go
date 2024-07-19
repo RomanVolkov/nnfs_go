@@ -40,7 +40,7 @@ func (loss *CategoricalCrossentropyLoss) Forward(prediction *mat.Dense, target *
 	return negative_log_likelihoods
 }
 
-func (loss *CategoricalCrossentropyLoss) Backward(dvalues mat.Dense, target *mat.Dense) {
+func (loss *CategoricalCrossentropyLoss) Backward(dvalues *mat.Dense, target *mat.Dense) {
 	_, c := target.Dims()
 	if c != 1 {
 		panic("target does not consist from target class; should have one value from sample")
@@ -62,4 +62,8 @@ func (loss *CategoricalCrossentropyLoss) Backward(dvalues mat.Dense, target *mat
 			loss.DInputs.Set(i, j, value)
 		}
 	}
+}
+
+func (loss *CategoricalCrossentropyLoss) GetDInputs() *mat.Dense {
+	return &loss.DInputs
 }

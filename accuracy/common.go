@@ -30,6 +30,17 @@ func CalculateAccuracy(accuracy AccuracyInterface, predictions *mat.Dense, targe
 		}
 	}
 
+	sum := 0.0
+	for _, row := range comparisons {
+		for _, v := range row {
+			if v {
+				sum += 1
+			}
+		}
+	}
+
+	accuracy.AddAccumulated(sum, int64(len(comparisons)))
+
 	return float64(countTrue) / float64(count)
 }
 

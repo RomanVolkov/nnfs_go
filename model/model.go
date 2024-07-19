@@ -135,10 +135,19 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 				batchX = x
 				batchY = y
 			} else {
-				_, cols := x.Dims()
-				batchX = *mat.DenseCopyOf(x.Slice(step**batchSize, (step+1)**batchSize, 0, cols-1))
-				_, cols = y.Dims()
-				batchY = *mat.DenseCopyOf(y.Slice(step**batchSize, (step+1)**batchSize, 0, cols-1))
+				rows, cols := x.Dims()
+				targetRowIndex := (step + 1) * *batchSize
+				if targetRowIndex > rows {
+					targetRowIndex = rows - 1
+				}
+				batchX = *mat.DenseCopyOf(x.Slice(step**batchSize, targetRowIndex, 0, cols))
+
+				rows, cols = y.Dims()
+				targetRowIndex = (step + 1) * *batchSize
+				if targetRowIndex > rows {
+					targetRowIndex = rows - 1
+				}
+				batchY = *mat.DenseCopyOf(y.Slice(step**batchSize, targetRowIndex, 0, cols))
 			}
 
 			output := m.Forward(batchX, true)
@@ -199,10 +208,19 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 				batchX = X_val
 				batchY = Y_val
 			} else {
-				_, cols := x.Dims()
-				batchX = *mat.DenseCopyOf(X_val.Slice(step**batchSize, (step+1)**batchSize, 0, cols-1))
-				_, cols = y.Dims()
-				batchY = *mat.DenseCopyOf(Y_val.Slice(step**batchSize, (step+1)**batchSize, 0, cols-1))
+				rows, cols := X_val.Dims()
+				targetRowIndex := (step + 1) * *batchSize
+				if targetRowIndex > rows {
+					targetRowIndex = rows - 1
+				}
+				batchX = *mat.DenseCopyOf(X_val.Slice(step**batchSize, targetRowIndex, 0, cols))
+
+				rows, cols = Y_val.Dims()
+				targetRowIndex = (step + 1) * *batchSize
+				if targetRowIndex > rows {
+					targetRowIndex = rows - 1
+				}
+				batchY = *mat.DenseCopyOf(Y_val.Slice(step**batchSize, targetRowIndex, 0, cols))
 			}
 			validationOutput := m.Forward(batchX, false)
 			loss.CalculateLoss(m.lossFunction, validationOutput, &batchY)
