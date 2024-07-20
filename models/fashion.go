@@ -42,5 +42,11 @@ func RunFashionModel() {
 
 	batchSize := 128
 	m.Description()
-	m.Train(model.ModelData{X: *x, Y: *y}, 10, &batchSize, 100, &model.ModelData{X: *x_val, Y: *y_val})
+
+	trainingdata := model.ModelData{X: *x, Y: *y}
+	validationData := model.ModelData{X: *x_val, Y: *y_val}
+	m.Train(trainingdata, 10, &batchSize, 100, &validationData)
+
+	m.Evaluate(validationData, &batchSize)
+	m.Evaluate(trainingdata, &batchSize)
 }

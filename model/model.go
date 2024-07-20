@@ -98,19 +98,16 @@ func (m *Model) Backward(output mat.Dense, target mat.Dense) {
 }
 
 func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printEvery int, validationData *ModelData) {
+	fmt.Println("================================")
+	fmt.Println("Training")
 	m.accuracy.Initialization(&trainingData.Y)
 
 	// default value if batch size is nil
 	trainSteps := 1
-	validationSteps := 1
 
 	// calculate steps based on data lenght and batch size
 	if batchSize != nil {
 		trainSteps = calculateSteps(trainingData, *batchSize)
-
-		if validationData != nil {
-			validationSteps = calculateSteps(*validationData, *batchSize)
-		}
 	}
 
 	for epoch := 0; epoch < epochs+1; epoch++ {
@@ -161,26 +158,39 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 		epochAccuracy := m.accuracy.CalculateAccumulatedAccuracy()
 		fmt.Println("training, ",
 			"loss:", epochLoss,
-			"(data loss:", epochDataLoss, "reg loss:", epochRegularisationLoss, ") ",
+			"(data_loss:", epochDataLoss, "reg_loss:", epochRegularisationLoss, ") ",
 			"acc:", epochAccuracy,
 			"lr", m.optimizer.GetCurrentLearningRate())
 	}
 
 	if validationData != nil {
-		m.lossFunction.ResetAccumulated()
-		m.accuracy.ResetAccumulated()
-
-		for _, step := range utils.MakeRange(validationSteps) {
-			batchX, batchY := makeBatch(*validationData, step, batchSize)
-			validationOutput := m.Forward(batchX, false)
-			loss.CalculateLoss(m.lossFunction, validationOutput, &batchY)
-			validationPredictions := m.outputLayerActivation.Predictions(validationOutput)
-			accuracy.CalculateAccuracy(m.accuracy, &validationPredictions, &batchY)
-		}
-		valLoss := m.lossFunction.CalculateAccumulatedLoss()
-		valAccuracy := m.accuracy.CalculateAccumulatedAccuracy()
-		fmt.Println("validation: ", "loss:", valLoss, "accuracy:", valAccuracy)
+		m.Evaluate(*validationData, batchSize)
 	}
+}
+
+func (m *Model) Evaluate(data ModelData, batchSize *int) {
+	fmt.Println("================================")
+	fmt.Println("Evaluation")
+	validationSteps := 1
+	if batchSize != nil {
+		validationSteps = calculateSteps(data, *batchSize)
+	}
+
+	m.lossFunction.RegularizationLoss()
+	m.accuracy.ResetAccumulated()
+
+	for _, step := range utils.MakeRange(validationSteps) {
+		batchX, batchY := makeBatch(data, step, batchSize)
+		validationOutput := m.Forward(batchX, false)
+
+		loss.CalculateLoss(m.lossFunction, validationOutput, &batchY)
+
+		validationPredictions := m.outputLayerActivation.Predictions(validationOutput)
+		accuracy.CalculateAccuracy(m.accuracy, &validationPredictions, &batchY)
+	}
+	valLoss := m.lossFunction.CalculateAccumulatedLoss()
+	valAccuracy := m.accuracy.CalculateAccumulatedAccuracy()
+	fmt.Println("validation:", "loss:", valLoss, "accuracy:", valAccuracy)
 }
 
 func calculateSteps(data ModelData, batchSize int) int {
