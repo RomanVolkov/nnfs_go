@@ -98,8 +98,7 @@ func (m *Model) Backward(output mat.Dense, target mat.Dense) {
 }
 
 func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printEvery int, validationData *ModelData) {
-	x, y := trainingData.X, trainingData.Y
-	m.accuracy.Initialization(&y)
+	m.accuracy.Initialization(&trainingData.Y)
 
 	// default value if batch size is nil
 	trainSteps := 1
@@ -107,18 +106,10 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 
 	// calculate steps based on data lenght and batch size
 	if batchSize != nil {
-		count, _ := trainingData.X.Dims()
-		trainSteps = count / *batchSize
-		if trainSteps**batchSize < count {
-			trainSteps += 1
-		}
+		trainSteps = calculateSteps(trainingData, *batchSize)
 
 		if validationData != nil {
-			count, _ = validationData.X.Dims()
-			validationSteps = count / *batchSize
-			if validationSteps**batchSize < count {
-				validationSteps += 1
-			}
+			validationSteps = calculateSteps(*validationData, *batchSize)
 		}
 	}
 
@@ -129,27 +120,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 		m.accuracy.ResetAccumulated()
 
 		for _, step := range utils.MakeRange(trainSteps) {
-			var batchX mat.Dense
-			var batchY mat.Dense
-			if batchSize == nil {
-				batchX = x
-				batchY = y
-			} else {
-				rows, cols := x.Dims()
-				targetRowIndex := (step + 1) * *batchSize
-				if targetRowIndex > rows {
-					targetRowIndex = rows - 1
-				}
-				batchX = *mat.DenseCopyOf(x.Slice(step**batchSize, targetRowIndex, 0, cols))
-
-				rows, cols = y.Dims()
-				targetRowIndex = (step + 1) * *batchSize
-				if targetRowIndex > rows {
-					targetRowIndex = rows - 1
-				}
-				batchY = *mat.DenseCopyOf(y.Slice(step**batchSize, targetRowIndex, 0, cols))
-			}
-
+			batchX, batchY := makeBatch(trainingData, step, batchSize)
 			output := m.Forward(batchX, true)
 
 			dataLoss := loss.CalculateLoss(m.lossFunction, output, &batchY)
@@ -196,32 +167,11 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 	}
 
 	if validationData != nil {
-		X_val, Y_val := validationData.X, validationData.Y
 		m.lossFunction.ResetAccumulated()
 		m.accuracy.ResetAccumulated()
 
 		for _, step := range utils.MakeRange(validationSteps) {
-
-			var batchX mat.Dense
-			var batchY mat.Dense
-			if batchSize == nil {
-				batchX = X_val
-				batchY = Y_val
-			} else {
-				rows, cols := X_val.Dims()
-				targetRowIndex := (step + 1) * *batchSize
-				if targetRowIndex > rows {
-					targetRowIndex = rows - 1
-				}
-				batchX = *mat.DenseCopyOf(X_val.Slice(step**batchSize, targetRowIndex, 0, cols))
-
-				rows, cols = Y_val.Dims()
-				targetRowIndex = (step + 1) * *batchSize
-				if targetRowIndex > rows {
-					targetRowIndex = rows - 1
-				}
-				batchY = *mat.DenseCopyOf(Y_val.Slice(step**batchSize, targetRowIndex, 0, cols))
-			}
+			batchX, batchY := makeBatch(*validationData, step, batchSize)
 			validationOutput := m.Forward(batchX, false)
 			loss.CalculateLoss(m.lossFunction, validationOutput, &batchY)
 			validationPredictions := m.outputLayerActivation.Predictions(validationOutput)
@@ -231,4 +181,37 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 		valAccuracy := m.accuracy.CalculateAccumulatedAccuracy()
 		fmt.Println("validation: ", "loss:", valLoss, "accuracy:", valAccuracy)
 	}
+}
+
+func calculateSteps(data ModelData, batchSize int) int {
+	count, _ := data.X.Dims()
+	steps := count / batchSize
+	if steps*batchSize < count {
+		steps += 1
+	}
+	return steps
+}
+
+func makeBatch(data ModelData, step int, batchSize *int) (mat.Dense, mat.Dense) {
+	var batchX mat.Dense
+	var batchY mat.Dense
+	if batchSize == nil {
+		batchX = data.X
+		batchY = data.Y
+	} else {
+		rows, cols := data.X.Dims()
+		targetRowIndex := (step + 1) * *batchSize
+		if targetRowIndex > rows {
+			targetRowIndex = rows - 1
+		}
+		batchX = *mat.DenseCopyOf(data.X.Slice(step**batchSize, targetRowIndex, 0, cols))
+
+		rows, cols = data.Y.Dims()
+		targetRowIndex = (step + 1) * *batchSize
+		if targetRowIndex > rows {
+			targetRowIndex = rows - 1
+		}
+		batchY = *mat.DenseCopyOf(data.Y.Slice(step**batchSize, targetRowIndex, 0, cols))
+	}
+	return batchX, batchY
 }
