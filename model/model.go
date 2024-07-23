@@ -17,9 +17,9 @@ type Model struct {
 	layers                []layer.LayerInterface
 	outputLayerActivation activation.ActivationInterface
 
-	lossFunction loss.LossInterface
-	optimizer    optimizer.OptimizerInterface
-	accuracy     accuracy.AccuracyInterface
+	loss      loss.LossInterface
+	optimizer optimizer.OptimizerInterface
+	accuracy  accuracy.AccuracyInterface
 }
 
 type ModelData struct {
@@ -31,7 +31,7 @@ func (m *Model) Add(layer layer.LayerInterface) {
 }
 
 func (m *Model) Set(loss loss.LossInterface, optimizer optimizer.OptimizerInterface, accuracy accuracy.AccuracyInterface) {
-	m.lossFunction = loss
+	m.loss = loss
 	m.optimizer = optimizer
 	m.accuracy = accuracy
 }
@@ -44,7 +44,7 @@ func (m *Model) passTrainableLayer() {
 			trainableLayers = append(trainableLayers, layer)
 		}
 	}
-	m.lossFunction.SetLayers(trainableLayers)
+	m.loss.SetLayers(trainableLayers)
 }
 
 func (m *Model) Finalize() {
@@ -66,7 +66,7 @@ func (m *Model) Description() {
 		fmt.Print(l.Name(), ", ")
 	}
 	fmt.Println()
-	fmt.Println(m.lossFunction.Name())
+	fmt.Println(m.loss.Name())
 	fmt.Println(m.optimizer.Name())
 }
 
@@ -85,12 +85,12 @@ func (m *Model) Forward(input mat.Dense, isTraining bool) *mat.Dense {
 }
 
 func (m *Model) Backward(output mat.Dense, target mat.Dense) {
-	m.lossFunction.Backward(&output, &target)
+	m.loss.Backward(&output, &target)
 
 	for k := range m.layers {
 		i := len(m.layers) - 1 - k
 		if i == len(m.layers)-1 {
-			m.layers[i].Backward(m.lossFunction.GetDInputs())
+			m.layers[i].Backward(m.loss.GetDInputs())
 		} else {
 			m.layers[i].Backward(m.layers[i+1].GetDInputs())
 		}
@@ -113,15 +113,15 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 	for epoch := 0; epoch < epochs+1; epoch++ {
 		fmt.Println("Epoch", epoch)
 
-		m.lossFunction.ResetAccumulated()
+		m.loss.ResetAccumulated()
 		m.accuracy.ResetAccumulated()
 
 		for _, step := range utils.MakeRange(trainSteps) {
 			batchX, batchY := makeBatch(trainingData, step, batchSize)
 			output := m.Forward(batchX, true)
 
-			dataLoss := loss.CalculateLoss(m.lossFunction, output, &batchY)
-			regularizationLoss := m.lossFunction.RegularizationLoss()
+			dataLoss := loss.CalculateLoss(m.loss, output, &batchY)
+			regularizationLoss := m.loss.RegularizationLoss()
 			lossValue := dataLoss + regularizationLoss
 
 			predictions := m.outputLayerActivation.Predictions(output)
@@ -152,8 +152,8 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 			}
 		}
 
-		epochDataLoss := m.lossFunction.CalculateAccumulatedLoss()
-		epochRegularisationLoss := m.lossFunction.RegularizationLoss()
+		epochDataLoss := m.loss.CalculateAccumulatedLoss()
+		epochRegularisationLoss := m.loss.RegularizationLoss()
 		epochLoss := epochDataLoss + epochRegularisationLoss
 		epochAccuracy := m.accuracy.CalculateAccumulatedAccuracy()
 		fmt.Println("training, ",
@@ -176,19 +176,19 @@ func (m *Model) Evaluate(data ModelData, batchSize *int) {
 		validationSteps = calculateSteps(data, *batchSize)
 	}
 
-	m.lossFunction.RegularizationLoss()
+	m.loss.RegularizationLoss()
 	m.accuracy.ResetAccumulated()
 
 	for _, step := range utils.MakeRange(validationSteps) {
 		batchX, batchY := makeBatch(data, step, batchSize)
 		validationOutput := m.Forward(batchX, false)
 
-		loss.CalculateLoss(m.lossFunction, validationOutput, &batchY)
+		loss.CalculateLoss(m.loss, validationOutput, &batchY)
 
 		validationPredictions := m.outputLayerActivation.Predictions(validationOutput)
 		accuracy.CalculateAccuracy(m.accuracy, &validationPredictions, &batchY)
 	}
-	valLoss := m.lossFunction.CalculateAccumulatedLoss()
+	valLoss := m.loss.CalculateAccumulatedLoss()
 	valAccuracy := m.accuracy.CalculateAccumulatedAccuracy()
 	fmt.Println("validation:", "loss:", valLoss, "accuracy:", valAccuracy)
 }
