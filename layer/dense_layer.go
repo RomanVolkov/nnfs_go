@@ -13,22 +13,6 @@ type Regularizer struct {
 type Layer struct {
 	inputs mat.Dense
 
-	DWeights mat.Dense
-	DBiases  mat.Dense
-	DInputs  mat.Dense
-
-	// used by SGD optimizer
-	WeightMomentums *mat.Dense
-	BiasMomentums   *mat.Dense
-
-	// used by Ada optimizer
-	WeightCache *mat.Dense
-	BiasCache   *mat.Dense
-
-	// regularization strenght
-	L1 Regularizer
-	L2 Regularizer
-
 	// rows - number of inputs from previous Layer
 	// cols - number of neurons within the Layer
 	// each column corresponds to weights of a neuron
@@ -39,6 +23,23 @@ type Layer struct {
 	// rows - number of inputs from previews Layer aka number of samples
 	// cols - number of neurons from current Layer
 	Output mat.Dense
+
+	// Backward pass
+	DWeights mat.Dense
+	DBiases  mat.Dense
+	DInputs  mat.Dense
+
+	// regularization strenght
+	L1 Regularizer
+	L2 Regularizer
+
+	// used by SGD and Adam optimizers
+	WeightMomentums *mat.Dense
+	BiasMomentums   *mat.Dense
+
+	// used by Ada, Adam and RMSProp optimizers
+	WeightCache *mat.Dense
+	BiasCache   *mat.Dense
 }
 
 func (layer *Layer) Name() string {
