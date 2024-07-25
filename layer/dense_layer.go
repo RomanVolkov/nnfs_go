@@ -33,7 +33,7 @@ type Layer struct {
 	L1 Regularizer
 	L2 Regularizer
 
-	// used by SGD and Adam optimizers
+	// used by SGD and Adam optimizer
 	WeightMomentums *mat.Dense
 	BiasMomentums   *mat.Dense
 

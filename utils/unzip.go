@@ -32,6 +32,7 @@ func UnzipDataset(fileURL string, targetFolderURL string) error {
 		if err != nil {
 			return err
 		}
+		defer rs.Close()
 
 		dirPath := filepath.Dir(f.Name)
 		err = os.MkdirAll(dirPath, 0750)
@@ -55,7 +56,6 @@ func UnzipDataset(fileURL string, targetFolderURL string) error {
 			return err
 		}
 
-		rs.Close()
 		fmt.Println()
 	}
 

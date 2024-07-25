@@ -8,6 +8,7 @@ import (
 	"main/loss"
 	"main/optimizer"
 	"main/utils"
+	"os"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -224,4 +225,32 @@ func makeBatch(data ModelData, step int, batchSize *int) (mat.Dense, mat.Dense) 
 		batchY = *mat.DenseCopyOf(data.Y.Slice(step**batchSize, targetRowIndex, 0, cols))
 	}
 	return batchX, batchY
+}
+
+// Store &  Load
+
+func (m *Model) Save(path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	// how to marshal custom sequence?
+	// 	layers                []layer.LayerInterface
+	// 	 loss
+	// 	 optimizer
+	// 	 accuracy
+
+	return nil
+}
+
+func LoadModel(path string) (*Model, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// call Finalize after loading of the data
+	return nil, nil
 }
