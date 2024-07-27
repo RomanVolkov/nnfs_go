@@ -73,3 +73,7 @@ func (optimizer *OptimizerSGD) UpdateParams(layer *layer.Layer) {
 func (optimizer *OptimizerSGD) PostUpdate() {
 	optimizer.iterations += 1
 }
+
+func (optimizer *OptimizerSGD) GetCurrentLearningRate() float64 {
+	return optimizer.CurrentLearningRate
+}

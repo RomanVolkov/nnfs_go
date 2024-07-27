@@ -70,3 +70,7 @@ func (optimizer *OptimizerRMSprop) UpdateParams(layer *layer.Layer) {
 func (optimizer *OptimizerRMSprop) PostUpdate() {
 	optimizer.iterations += 1
 }
+
+func (optimizer *OptimizerRMSprop) GetCurrentLearningRate() float64 {
+	return optimizer.CurrentLearningRate
+}

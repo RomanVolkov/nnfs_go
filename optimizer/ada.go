@@ -68,3 +68,7 @@ func (optimizer *OptimizerAda) UpdateParams(layer *layer.Layer) {
 func (optimizer *OptimizerAda) PostUpdate() {
 	optimizer.iterations += 1
 }
+
+func (optimizer *OptimizerAda) GetCurrentLearningRate() float64 {
+	return optimizer.CurrentLearningRate
+}
