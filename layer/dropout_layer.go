@@ -7,7 +7,8 @@ import (
 )
 
 type DropoutLayer struct {
-	inputs     mat.Dense
+	inputs mat.Dense
+	// TODO: should it be stored?
 	binaryMask mat.Dense
 
 	Output  mat.Dense

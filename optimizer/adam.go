@@ -14,7 +14,8 @@ type OptimizerAdam struct {
 	Epsilon             float64
 	Beta1               float64
 	Beta2               float64
-	iterations          int
+	// TODO: should it be expose to storage?
+	iterations int
 }
 
 func NewAdam() OptimizerAdam {

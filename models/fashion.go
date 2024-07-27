@@ -39,14 +39,23 @@ func RunFashionModel() {
 
 	m.Set(&loss.CategoricalCrossentropyLoss{}, &o, &accuracy.CategorialAccuracy{})
 	m.Finalize()
-
-	batchSize := 128
 	m.Description()
 
 	trainingData := model.ModelData{X: *x, Y: *y}
 	validationData := model.ModelData{X: *x_val, Y: *y_val}
-	m.Train(trainingData, 10, &batchSize, 100, &validationData)
+	epochs := 1
+	batchSize := 128
+	m.Train(trainingData, epochs, &batchSize, 100, &validationData)
 
 	m.Evaluate(validationData, &batchSize)
-	m.Evaluate(trainingData, &batchSize)
+
+	dataProvider := model.JSONModelDataProvider{}
+	dataProvider.Store("./assets/fashion.json", &m)
+
+	loadedModel, err := dataProvider.Load("./assets/fashion.json")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	loadedModel.Evaluate(validationData, &batchSize)
 }

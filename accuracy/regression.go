@@ -9,12 +9,12 @@ import (
 
 type RegressionAccuracy struct {
 	BaseAccuracy
-	precision float64
+	Precision float64 `json:"Precision"`
 }
 
 func (r *RegressionAccuracy) Initialization(target *mat.Dense) {
 	precision := stat.StdDev(target.RawMatrix().Data, nil) / 250.0
-	r.precision = precision
+	r.Precision = precision
 }
 
 func (r *RegressionAccuracy) Compare(predictions *mat.Dense, target *mat.Dense) [][]bool {
@@ -25,7 +25,7 @@ func (r *RegressionAccuracy) Compare(predictions *mat.Dense, target *mat.Dense) 
 	for i := range result {
 		result[i] = make([]bool, cols)
 		for j := range result[i] {
-			result[i][j] = math.Abs(predictions.At(i, j)-target.At(i, j)) < r.precision
+			result[i][j] = math.Abs(predictions.At(i, j)-target.At(i, j)) < r.Precision
 		}
 	}
 
