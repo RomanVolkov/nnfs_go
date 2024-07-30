@@ -8,14 +8,13 @@ import (
 )
 
 type OptimizerAdam struct {
-	CurrentLearningRate float64
-	LearningRate        float64
-	Decay               float64
-	Epsilon             float64
-	Beta1               float64
-	Beta2               float64
-	// TODO: should it be expose to storage?
-	iterations int
+	CurrentLearningRate float64 `json:"currentLearningRate"`
+	LearningRate        float64 `json:"learningRate"`
+	Decay               float64 `json:"decay"`
+	Epsilon             float64 `json:"epsilon"`
+	Beta1               float64 `json:"beta1"`
+	Beta2               float64 `json:"beta2"`
+	Iterations          int     `json:"iterations"`
 }
 
 func NewAdam() OptimizerAdam {
@@ -26,7 +25,7 @@ func NewAdam() OptimizerAdam {
 		Epsilon:             1e-7,
 		Beta1:               0.9,
 		Beta2:               0.999,
-		iterations:          0,
+		Iterations:          0,
 	}
 }
 
@@ -40,7 +39,7 @@ func (a *OptimizerAdam) GetCurrentLearningRate() float64 {
 
 func (optimizer *OptimizerAdam) PreUpdate() {
 	if optimizer.Decay > 0.0 {
-		optimizer.CurrentLearningRate = optimizer.LearningRate * (1.0 / (1.0 + optimizer.Decay*float64(optimizer.iterations)))
+		optimizer.CurrentLearningRate = optimizer.LearningRate * (1.0 / (1.0 + optimizer.Decay*float64(optimizer.Iterations)))
 	}
 }
 
@@ -71,10 +70,10 @@ func (optimizer *OptimizerAdam) UpdateParams(layer *layer.Layer) {
 	weightMomentumsCorrected := mat.DenseCopyOf(layer.WeightMomentums)
 	biasMomentumsCorrected := mat.DenseCopyOf(layer.BiasMomentums)
 	weightMomentumsCorrected.Apply(func(i, j int, v float64) float64 {
-		return v / (1 - math.Pow(optimizer.Beta1, float64(optimizer.iterations)+1))
+		return v / (1 - math.Pow(optimizer.Beta1, float64(optimizer.Iterations)+1))
 	}, weightMomentumsCorrected)
 	biasMomentumsCorrected.Apply(func(i, j int, v float64) float64 {
-		return v / (1 - math.Pow(optimizer.Beta1, float64(optimizer.iterations)+1))
+		return v / (1 - math.Pow(optimizer.Beta1, float64(optimizer.Iterations)+1))
 	}, biasMomentumsCorrected)
 
 	//  Update cache with squared current gradients
@@ -90,10 +89,10 @@ func (optimizer *OptimizerAdam) UpdateParams(layer *layer.Layer) {
 	weightCacheCorrected := mat.DenseCopyOf(layer.WeightCache)
 	biasCacheCorrected := mat.DenseCopyOf(layer.BiasCache)
 	weightCacheCorrected.Apply(func(i, j int, v float64) float64 {
-		return v / (1 - math.Pow(optimizer.Beta2, float64(optimizer.iterations)+1))
+		return v / (1 - math.Pow(optimizer.Beta2, float64(optimizer.Iterations)+1))
 	}, weightCacheCorrected)
 	biasCacheCorrected.Apply(func(i, j int, v float64) float64 {
-		return v / (1 - math.Pow(optimizer.Beta2, float64(optimizer.iterations)+1))
+		return v / (1 - math.Pow(optimizer.Beta2, float64(optimizer.Iterations)+1))
 	}, biasCacheCorrected)
 
 	// Vanilla SGD + normalization with square rooted cache
@@ -110,5 +109,5 @@ func (optimizer *OptimizerAdam) UpdateParams(layer *layer.Layer) {
 }
 
 func (optimizer *OptimizerAdam) PostUpdate() {
-	optimizer.iterations += 1
+	optimizer.Iterations += 1
 }

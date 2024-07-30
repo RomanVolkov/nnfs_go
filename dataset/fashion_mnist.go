@@ -39,6 +39,7 @@ func (f *FashionMNISTDataset) loadDataset(datasetPath string) (*mat.Dense, *mat.
 			return nil
 		}
 		labelStr := path.Base(filepath.Dir(rootPath))
+
 		label, err := strconv.Atoi(labelStr)
 		if err != nil {
 			return err

@@ -61,6 +61,14 @@ func (layer *Layer) Initialization(n_inputs int, n_neurons int) *Layer {
 	return layer
 }
 
+func (layer *Layer) LoadFromParams(weights *mat.Dense, biases *mat.Dense, L1, L2 Regularizer) {
+	layer.Weights = *mat.DenseCopyOf(weights)
+	layer.Biases = *mat.DenseCopyOf(biases)
+
+	layer.L1 = L1
+	layer.L2 = L2
+}
+
 func (layer *Layer) Forward(inputs *mat.Dense, isTraining bool) {
 	layer.inputs = *mat.DenseCopyOf(inputs)
 	// number_rows is equal to input sample size

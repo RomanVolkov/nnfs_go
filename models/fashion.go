@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"log"
 	"main/accuracy"
 	"main/activation"
@@ -46,8 +47,9 @@ func RunFashionModel() {
 	epochs := 1
 	batchSize := 128
 	m.Train(trainingData, epochs, &batchSize, 100, &validationData)
-
 	m.Evaluate(validationData, &batchSize)
+
+	fmt.Println("================================")
 
 	dataProvider := model.JSONModelDataProvider{}
 	dataProvider.Store("./assets/fashion.json", &m)
