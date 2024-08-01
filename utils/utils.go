@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
+	"golang.org/x/image/draw"
+	"image"
+	"image/color"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -44,4 +48,32 @@ func MakeRange(size int) []int {
 		indexes[i] = i
 	}
 	return indexes
+}
+
+func ConvertIntoGrayscale(src image.Image, width int, height int) image.Image {
+	dst := image.NewGray(image.Rect(0, 0, width, height))
+	draw.NearestNeighbor.Scale(dst, dst.Rect, src, src.Bounds(), draw.Over, nil)
+	return dst
+}
+
+func NormalizeGrascaleImageData(img image.Image) ([]float64, error) {
+	rows := img.Bounds().Max.X
+	cols := img.Bounds().Max.Y
+
+	data := make([]float64, rows*cols)
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			gray, ok := img.At(i, j).(color.Gray)
+			if ok {
+				y := gray.Y
+				data[i*rows+j] = (float64(y) - 127.5) / 127.5
+			} else {
+				return nil, errors.New("cannot take Grayscale color")
+			}
+
+		}
+	}
+
+	return data, nil
 }

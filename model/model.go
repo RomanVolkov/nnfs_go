@@ -193,6 +193,34 @@ func (m *Model) Evaluate(data ModelData, batchSize *int) {
 	fmt.Println("validation:", "loss:", valLoss, "accuracy:", valAccuracy)
 }
 
+func (m *Model) Predict(inputSamples *mat.Dense, batchSize *int) mat.Dense {
+	predictionSteps := 1
+	if batchSize != nil {
+		predictionSteps = calculateSteps(ModelData{X: *inputSamples, Y: *inputSamples}, *batchSize)
+	}
+
+	var output *mat.Dense
+	for _, step := range utils.MakeRange(predictionSteps) {
+		batchX, _ := makeBatch(ModelData{X: *inputSamples, Y: *inputSamples}, step, batchSize)
+		validationOutput := m.Forward(batchX, false)
+
+		if output == nil {
+			// init output from first response
+			output = mat.DenseCopyOf(validationOutput)
+		} else {
+			// append more outputs
+			oR, oC := output.Dims()
+			nR, _ := validationOutput.Dims()
+			tmp := mat.NewDense(oR+nR, oC, nil)
+			tmp.Stack(output, validationOutput)
+			output = tmp
+		}
+
+	}
+
+	return *output
+}
+
 func calculateSteps(data ModelData, batchSize int) int {
 	count, _ := data.X.Dims()
 	steps := count / batchSize

@@ -2,9 +2,9 @@ package dataset
 
 import (
 	"errors"
-	"image/color"
 	"image/png"
 	"io/fs"
+	"main/utils"
 	"math/rand"
 	"os"
 	"path"
@@ -94,25 +94,7 @@ func (f *FashionMNISTDataset) loadImage(path string) ([]float64, error) {
 		return nil, err
 	}
 
-	rows := img.Bounds().Max.X
-	cols := img.Bounds().Max.Y
-
-	data := make([]float64, rows*cols)
-
-	for i := 0; i < rows; i++ {
-		for j := 0; j < cols; j++ {
-			gray, ok := img.At(i, j).(color.Gray)
-			if ok {
-				y := gray.Y
-				data[i*rows+j] = (float64(y) - 127.5) / 127.5
-			} else {
-				return nil, errors.New("cannot take Grayscale color")
-			}
-
-		}
-	}
-
-	return data, nil
+	return utils.NormalizeGrascaleImageData(img)
 }
 
 func makeRange(lenght int) []int {
