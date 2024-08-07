@@ -9,6 +9,7 @@ import (
 	"main/utils"
 	"os"
 
+	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -28,22 +29,42 @@ func main() {
 	batchSize := 128
 
 	loadedModel.Evaluate(validationData, &batchSize)
-
 	_, c := x_val.Dims()
 	testX := mat.NewDense(1, c, x_val.RawRowView(0))
 
 	predictions := loadedModel.Predict(testX, nil)
 	fmt.Println(mat.Formatted(&predictions))
 
-	input, _ := os.Open("./assets/tshirt.png")
+	// input, _ := os.Open("./assets/tshirt.png")
+	input, _ := os.Open("./assets/pants.png")
 	defer input.Close()
-
-	target, _ := os.Create("./assets/tshirt-g.png")
-	defer target.Close()
 
 	src, _ := png.Decode(input)
 	dst := utils.ConvertIntoGrayscale(src, 28, 28)
 
-	png.Encode(target, dst)
+	data, err := utils.NormalizeGrascaleImageData(dst, true)
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	classes := map[int]string{
+		0: "T-shirt/top",
+		1: "Trouser",
+		2: "Pullover",
+		3: "Dress",
+		4: "Coat",
+		5: "Sandal",
+		6: "Shirt",
+		7: "Sneaker",
+		8: "Bag",
+		9: "Ankle boot",
+	}
+
+	inputData := mat.NewDense(1, 28*28, data)
+	predictions = loadedModel.Predict(inputData, nil)
+	fmt.Println("================================")
+	fmt.Println("calling prediction")
+	fmt.Println(mat.Formatted(&predictions))
+	classIndex := floats.MaxIdx(predictions.RawMatrix().Data)
+	fmt.Println(classes[classIndex])
 }

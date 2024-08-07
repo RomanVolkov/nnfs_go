@@ -94,7 +94,7 @@ func (f *FashionMNISTDataset) loadImage(path string) ([]float64, error) {
 		return nil, err
 	}
 
-	return utils.NormalizeGrascaleImageData(img)
+	return utils.NormalizeGrascaleImageData(img, false)
 }
 
 func makeRange(lenght int) []int {

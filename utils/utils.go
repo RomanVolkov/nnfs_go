@@ -56,7 +56,7 @@ func ConvertIntoGrayscale(src image.Image, width int, height int) image.Image {
 	return dst
 }
 
-func NormalizeGrascaleImageData(img image.Image) ([]float64, error) {
+func NormalizeGrascaleImageData(img image.Image, invertColor bool) ([]float64, error) {
 	rows := img.Bounds().Max.X
 	cols := img.Bounds().Max.Y
 
@@ -67,11 +67,14 @@ func NormalizeGrascaleImageData(img image.Image) ([]float64, error) {
 			gray, ok := img.At(i, j).(color.Gray)
 			if ok {
 				y := gray.Y
+				if invertColor {
+					y = 255 - y
+				}
+				// convert the range into -1.0...1.0
 				data[i*rows+j] = (float64(y) - 127.5) / 127.5
 			} else {
 				return nil, errors.New("cannot take Grayscale color")
 			}
-
 		}
 	}
 
