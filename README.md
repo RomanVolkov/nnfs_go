@@ -12,5 +12,6 @@ Implementation of this repo was recorded and published on YouTube, [here](https:
 Just use 
 - `make build` to build the project
 - `make run` to run the project
+- `make serve` to run simple http-server to use Fashion MNIST model
 
 In order to train a classification model using Fashion MNIST dataset you have to unzip `assets/fashion_mnist_images.zip` into `assets/fashion_mnist_images` and then train it, but my trained version is already in the repo `fashion.json`
