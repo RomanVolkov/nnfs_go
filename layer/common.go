@@ -8,6 +8,4 @@ type LayerInterface interface {
 	Name() string
 	Forward(inputs *mat.Dense, isTraining bool)
 	Backward(dvalues *mat.Dense)
-	// json.Marshaler
-	// json.Unmarshaler
 }

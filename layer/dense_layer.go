@@ -160,13 +160,3 @@ func (a *Layer) GetOutput() *mat.Dense {
 func (a *Layer) GetDInputs() *mat.Dense {
 	return &a.DInputs
 }
-
-// Marshaling
-
-func (layer *Layer) MarshalJSON() ([]byte, error) {
-	return make([]byte, 0), nil
-}
-
-func (layer *Layer) UnmarshalJSON([]byte) error {
-	return nil
-}
