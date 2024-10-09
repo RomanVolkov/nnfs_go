@@ -34,7 +34,7 @@ func (optimizer *OptimizerSGD) PreUpdate() {
 	}
 }
 
-func (optimizer *OptimizerSGD) UpdateParams(layer *layer.Layer) {
+func (optimizer *OptimizerSGD) UpdateParams(layer *layer.DenseLayer) {
 	weightUpdates := mat.DenseCopyOf(&layer.Weights)
 	biasUpdates := mat.DenseCopyOf(&layer.Biases)
 

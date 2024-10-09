@@ -13,7 +13,8 @@ type BinaryCategorialAccuracy struct {
 func (r *BinaryCategorialAccuracy) Initialization(target *mat.Dense) {}
 
 func (r *BinaryCategorialAccuracy) Compare(predictions *mat.Dense, target *mat.Dense) [][]bool {
-	if !utils.CompareDims(predictions, target) {
+	var p, t mat.Matrix = predictions, target
+	if !utils.CompareDims(&p, &t) {
 		panic("incorrect dimentions")
 	}
 

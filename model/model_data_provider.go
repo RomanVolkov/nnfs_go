@@ -31,13 +31,13 @@ func (provider *JSONModelDataProvider) Store(path string, model *Model) error {
 
 	layersWraps := make([]interface{}, 0)
 	for _, item := range model.Layers {
-		var l *layer.Layer = &layer.Layer{}
+		var l *layer.DenseLayer = &layer.DenseLayer{}
 		var relu *activation.Activation_ReLU = &activation.Activation_ReLU{}
 		var softmax *activation.SoftmaxActivation = &activation.SoftmaxActivation{}
 
 		if reflect.TypeOf(item).String() == reflect.TypeOf(l).String() {
-			l, _ := item.(*layer.Layer)
-			layersWraps = append(layersWraps, marshaling.LayerWrapper{Layer: *l})
+			l, _ := item.(*layer.DenseLayer)
+			layersWraps = append(layersWraps, marshaling.LayerWrapper{DenseLayer: *l})
 		}
 		if reflect.TypeOf(item).String() == reflect.TypeOf(relu).String() {
 			v := struct {
@@ -109,14 +109,14 @@ func (provider *JSONModelDataProvider) Load(path string) (*Model, error) {
 			layerData, ok := l.(map[string]interface{})
 			if ok {
 				// decode layer.Layer
-				if layerData["type"] == reflect.TypeOf(layer.Layer{}).String() {
+				if layerData["type"] == reflect.TypeOf(layer.DenseLayer{}).String() {
 					layerWrap := marshaling.LayerWrapper{}
 					bd, err := json.Marshal(l)
 					if err != nil {
 						return nil, err
 					}
 					err = json.Unmarshal(bd, &layerWrap)
-					layer := layer.Layer{}
+					layer := layer.DenseLayer{}
 					layer.LoadFromParams(&layerWrap.Weights, &layerWrap.Biases, layerWrap.L1, layerWrap.L2)
 					m.Add(&layer)
 				}

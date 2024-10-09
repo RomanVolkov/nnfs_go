@@ -60,7 +60,7 @@ func (loss *OptimizedCategoricalCrossentropyLoss) GetDInputs() *mat.Dense {
 	return nil
 }
 
-func (loss *OptimizedCategoricalCrossentropyLoss) SetLayers(layers []*layer.Layer) {
+func (loss *OptimizedCategoricalCrossentropyLoss) SetLayers(layers []*layer.DenseLayer) {
 	loss.loss.SetLayers(layers)
 }
 

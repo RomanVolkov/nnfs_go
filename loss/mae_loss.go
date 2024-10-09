@@ -18,7 +18,8 @@ func (loss *MeanAbsoluteErrorLoss) Name() string {
 // predictions has one value for the sample
 // this is why target is single-dim array
 func (loss *MeanAbsoluteErrorLoss) Forward(prediction *mat.Dense, target *mat.Dense) []float64 {
-	if !utils.CompareDims(prediction, target) {
+	var p, t mat.Matrix = prediction, target
+	if !utils.CompareDims(&p, &t) {
 		panic("incorrect dimentions")
 	}
 	rows, cols := prediction.Dims()

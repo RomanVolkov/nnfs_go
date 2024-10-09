@@ -9,7 +9,7 @@ import (
 type LossInterface interface {
 	Name() string
 	GetDInputs() *mat.Dense
-	SetLayers(layers []*layer.Layer)
+	SetLayers(layers []*layer.DenseLayer)
 	Forward(prediction *mat.Dense, target *mat.Dense) []float64
 	Backward(dvalues *mat.Dense, target *mat.Dense)
 	RegularizationLoss() float64

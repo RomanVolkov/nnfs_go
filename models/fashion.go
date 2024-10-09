@@ -26,13 +26,13 @@ func RunFashionModel() {
 	_, numInputs := x.Dims()
 
 	m := model.Model{}
-	m.Add((&layer.Layer{}).Initialization(numInputs, 128))
+	m.Add((&layer.DenseLayer{}).Initialization(numInputs, 128))
 	m.Add(&activation.Activation_ReLU{})
 
-	m.Add((&layer.Layer{}).Initialization(128, 128))
+	m.Add((&layer.DenseLayer{}).Initialization(128, 128))
 	m.Add(&activation.Activation_ReLU{})
 
-	m.Add((&layer.Layer{}).Initialization(128, 10))
+	m.Add((&layer.DenseLayer{}).Initialization(128, 10))
 	m.Add(&activation.SoftmaxActivation{})
 
 	o := optimizer.NewAdam()

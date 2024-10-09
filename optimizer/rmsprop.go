@@ -37,7 +37,7 @@ func (optimizer *OptimizerRMSprop) PreUpdate() {
 	}
 }
 
-func (optimizer *OptimizerRMSprop) UpdateParams(layer *layer.Layer) {
+func (optimizer *OptimizerRMSprop) UpdateParams(layer *layer.DenseLayer) {
 	weightUpdates := mat.DenseCopyOf(&layer.Weights)
 	biasUpdates := mat.DenseCopyOf(&layer.Biases)
 

@@ -35,7 +35,7 @@ func (optimizer *OptimizerAda) PreUpdate() {
 	}
 }
 
-func (optimizer *OptimizerAda) UpdateParams(layer *layer.Layer) {
+func (optimizer *OptimizerAda) UpdateParams(layer *layer.DenseLayer) {
 	weightUpdates := mat.DenseCopyOf(&layer.Weights)
 	biasUpdates := mat.DenseCopyOf(&layer.Biases)
 

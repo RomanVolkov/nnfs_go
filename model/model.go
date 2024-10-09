@@ -37,9 +37,9 @@ func (m *Model) Set(loss loss.LossInterface, optimizer optimizer.OptimizerInterf
 }
 
 func (m *Model) passTrainableLayer() {
-	trainableLayers := make([]*layer.Layer, 0)
+	trainableLayers := make([]*layer.DenseLayer, 0)
 	for _, item := range m.Layers {
-		layer, ok := item.(*layer.Layer)
+		layer, ok := item.(*layer.DenseLayer)
 		if ok {
 			trainableLayers = append(trainableLayers, layer)
 		}
@@ -135,7 +135,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 
 			m.Optimizer.PreUpdate()
 			for _, item := range m.Layers {
-				layer, ok := item.(*layer.Layer)
+				layer, ok := item.(*layer.DenseLayer)
 				if ok {
 					m.Optimizer.UpdateParams(layer)
 				}

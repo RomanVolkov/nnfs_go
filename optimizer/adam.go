@@ -43,7 +43,7 @@ func (optimizer *OptimizerAdam) PreUpdate() {
 	}
 }
 
-func (optimizer *OptimizerAdam) UpdateParams(layer *layer.Layer) {
+func (optimizer *OptimizerAdam) UpdateParams(layer *layer.DenseLayer) {
 	weightUpdates := mat.DenseCopyOf(&layer.Weights)
 	biasUpdates := mat.DenseCopyOf(&layer.Biases)
 

@@ -11,7 +11,7 @@ import (
 )
 
 func PrintDims(r int, c int) {
-	fmt.Println("Dims", r, c)
+	fmt.Println("Dims:", r, c)
 }
 
 func PrintDense(value *mat.Dense) {
@@ -32,14 +32,11 @@ func PrintDense(value *mat.Dense) {
 	fmt.Println(pythonString)
 }
 
-func CompareDims(lhs *mat.Dense, rhs *mat.Dense) bool {
-	l_r, l_c := lhs.Dims()
-	r_r, r_c := rhs.Dims()
+func CompareDims(lhs *mat.Matrix, rhs *mat.Matrix) bool {
+	l_r, l_c := (*lhs).Dims()
+	r_r, r_c := (*rhs).Dims()
 
-	if l_r != r_r {
-		return false
-	}
-	return l_c == r_c
+	return l_c == r_c && l_r == r_r
 }
 
 func MakeRange(size int) []int {

@@ -10,7 +10,7 @@ type Regularizer struct {
 	Weight, Bias float64
 }
 
-type Layer struct {
+type DenseLayer struct {
 	inputs mat.Dense
 
 	// rows - number of inputs from previous Layer
@@ -42,11 +42,11 @@ type Layer struct {
 	BiasCache   *mat.Dense
 }
 
-func (layer *Layer) Name() string {
+func (layer *DenseLayer) Name() string {
 	return "Dense Layer"
 }
 
-func (layer *Layer) Initialization(n_inputs int, n_neurons int) *Layer {
+func (layer *DenseLayer) Initialization(n_inputs int, n_neurons int) *DenseLayer {
 	weights := make([]float64, n_inputs*n_neurons)
 	for i := range weights {
 		weights[i] = 0.01 * (rand.Float64() - 0.5) * 2
@@ -61,7 +61,7 @@ func (layer *Layer) Initialization(n_inputs int, n_neurons int) *Layer {
 	return layer
 }
 
-func (layer *Layer) LoadFromParams(weights *mat.Dense, biases *mat.Dense, L1, L2 Regularizer) {
+func (layer *DenseLayer) LoadFromParams(weights *mat.Dense, biases *mat.Dense, L1, L2 Regularizer) {
 	layer.Weights = *mat.DenseCopyOf(weights)
 	layer.Biases = *mat.DenseCopyOf(biases)
 
@@ -69,7 +69,7 @@ func (layer *Layer) LoadFromParams(weights *mat.Dense, biases *mat.Dense, L1, L2
 	layer.L2 = L2
 }
 
-func (layer *Layer) Forward(inputs *mat.Dense, isTraining bool) {
+func (layer *DenseLayer) Forward(inputs *mat.Dense, isTraining bool) {
 	layer.inputs = *mat.DenseCopyOf(inputs)
 	// number_rows is equal to input sample size
 	number_rows, _ := inputs.Dims()
@@ -91,7 +91,7 @@ func (layer *Layer) Forward(inputs *mat.Dense, isTraining bool) {
 	layer.Output = *result
 }
 
-func (layer *Layer) Backward(dvalues *mat.Dense) {
+func (layer *DenseLayer) Backward(dvalues *mat.Dense) {
 	// Gradients on params
 	_, biasesCols := dvalues.Dims()
 	layer.DBiases = *mat.NewDense(1, biasesCols, nil)
@@ -153,10 +153,10 @@ func (layer *Layer) Backward(dvalues *mat.Dense) {
 	layer.DInputs.Product(dvalues, layer.Weights.T())
 }
 
-func (a *Layer) GetOutput() *mat.Dense {
+func (a *DenseLayer) GetOutput() *mat.Dense {
 	return &a.Output
 }
 
-func (a *Layer) GetDInputs() *mat.Dense {
+func (a *DenseLayer) GetDInputs() *mat.Dense {
 	return &a.DInputs
 }

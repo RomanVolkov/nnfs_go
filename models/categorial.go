@@ -16,7 +16,7 @@ func RunCategorialModel() {
 
 	m := model.Model{}
 
-	layer1 := layer.Layer{}
+	layer1 := layer.DenseLayer{}
 	layer1.Initialization(2, 512)
 	layer1.L2 = layer.Regularizer{Weight: 5e-4, Bias: 5e-4}
 	m.Add(&layer1)
@@ -24,7 +24,7 @@ func RunCategorialModel() {
 
 	m.Add((&layer.DropoutLayer{}).Initialization(0.1))
 
-	m.Add((&layer.Layer{}).Initialization(512, 3))
+	m.Add((&layer.DenseLayer{}).Initialization(512, 3))
 
 	activ, l := optimizations.MakeOptimizedCategorialCrossentropy()
 	m.Add(&activ)

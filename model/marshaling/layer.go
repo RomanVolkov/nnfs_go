@@ -7,7 +7,7 @@ import (
 )
 
 type LayerWrapper struct {
-	layer.Layer
+	layer.DenseLayer
 }
 
 type regularizerWrapper struct {
@@ -28,9 +28,9 @@ func (value LayerWrapper) MarshalJSON() ([]byte, error) {
 		Biases:  DenseWrapper{Dense: value.Biases},
 		L1:      regularizerWrapper{Weight: value.L1.Weight, Bias: value.L1.Bias},
 		L2:      regularizerWrapper{Weight: value.L2.Weight, Bias: value.L2.Bias},
-		Type:    reflect.TypeOf(value.Layer).String(),
+		Type:    reflect.TypeOf(value.DenseLayer).String(),
 	}
-	typeStr := reflect.TypeOf(value.Layer).String()
+	typeStr := reflect.TypeOf(value.DenseLayer).String()
 	data := struct {
 		Type string           `json:"type"`
 		Data layerWrapperData `json:"data"`
@@ -53,11 +53,11 @@ func (value *LayerWrapper) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	l := layer.Layer{}
+	l := layer.DenseLayer{}
 	l.Weights = wrap.Data.Weights.Dense
 	l.Biases = wrap.Data.Biases.Dense
 	l.L1 = layer.Regularizer{Weight: wrap.Data.L1.Weight, Bias: wrap.Data.L1.Bias}
 	l.L2 = layer.Regularizer{Weight: wrap.Data.L2.Weight, Bias: wrap.Data.L2.Bias}
-	value.Layer = l
+	value.DenseLayer = l
 	return nil
 }

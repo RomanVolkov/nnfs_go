@@ -15,11 +15,11 @@ func RunRegressionModel() {
 
 	m := model.Model{}
 
-	m.Add((&layer.Layer{}).Initialization(1, 64))
+	m.Add((&layer.DenseLayer{}).Initialization(1, 64))
 	m.Add(&activation.Activation_ReLU{})
-	m.Add((&layer.Layer{}).Initialization(64, 64))
+	m.Add((&layer.DenseLayer{}).Initialization(64, 64))
 	m.Add(&activation.Activation_ReLU{})
-	m.Add((&layer.Layer{}).Initialization(64, 1))
+	m.Add((&layer.DenseLayer{}).Initialization(64, 1))
 	m.Add(&activation.LinearActivation{})
 
 	lossF := loss.MeanSquaredErrorLoss{}

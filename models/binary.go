@@ -16,12 +16,12 @@ func RunBinaryModel() {
 
 	m := model.Model{}
 
-	layer1 := layer.Layer{}
+	layer1 := layer.DenseLayer{}
 	layer1.Initialization(2, 64)
 	layer1.L2 = layer.Regularizer{Weight: 5e-4, Bias: 5e-4}
 	m.Add(&layer1)
 	m.Add(&activation.Activation_ReLU{})
-	m.Add((&layer.Layer{}).Initialization(64, 1))
+	m.Add((&layer.DenseLayer{}).Initialization(64, 1))
 	m.Add(&activation.SigmoidActivation{})
 
 	l := loss.BinaryCrossentropyLoss{}

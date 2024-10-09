@@ -10,12 +10,12 @@ import (
 
 type BaseLoss struct {
 	DInputs            mat.Dense
-	layers             []*layer.Layer
+	layers             []*layer.DenseLayer
 	accumulatedLossSum float64
 	accumulatedCount   int64
 }
 
-func (loss *BaseLoss) SetLayers(layers []*layer.Layer) {
+func (loss *BaseLoss) SetLayers(layers []*layer.DenseLayer) {
 	loss.layers = layers
 }
 
