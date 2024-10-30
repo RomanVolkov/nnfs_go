@@ -7,5 +7,7 @@ type LayerInterface interface {
 	GetDInputs() *mat.Dense
 	Name() string
 	Forward(inputs *mat.Dense, isTraining bool)
+	// ??
+	// Forward (layer *LayerInterface, isTraining bool)
 	Backward(dvalues *mat.Dense)
 }

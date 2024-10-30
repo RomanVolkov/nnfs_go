@@ -23,6 +23,8 @@ func Correlate2dOps(input mat.Matrix, kernel mat.Matrix) (float64, error) {
 	return sum, nil
 }
 
+// input - 2D array of image (currentl grayscale?)
+// kernel - 2D array
 func Correlate2dValid(input mat.Dense, kernel mat.Dense) (mat.Dense, error) {
 	// allocate output based on formula M-N+1
 	// calculate the output
@@ -35,7 +37,7 @@ func Correlate2dValid(input mat.Dense, kernel mat.Dense) (mat.Dense, error) {
 		for j := 0; j < s; j++ {
 			value, err := Correlate2dOps(input.Slice(i, i+m, j, j+m), &kernel)
 			if err != nil {
-				return *mat.NewDense(0, 0, nil), err
+				return *mat.NewDense(1, 1, nil), err
 			}
 			output.Set(i, j, value)
 		}
@@ -44,14 +46,31 @@ func Correlate2dValid(input mat.Dense, kernel mat.Dense) (mat.Dense, error) {
 	return *output, nil
 }
 
-func rawValues(m *mat.Matrix) []float64 {
-	r, c := (*m).Dims()
-	output := make([]float64, r*c)
-	for i := 0; i < r; i++ {
-		for j := 0; j < c; j++ {
-			output[i*r+j] = (*m).At(i, j)
+func Correlate2DFull(input mat.Dense, kernel mat.Dense) (mat.Dense, error) {
+	inputSize, _ := input.Dims()
+	kernelSize, _ := kernel.Dims()
+	s := inputSize + 2 - kernelSize + 1
+	output := mat.NewDense(s, s, nil)
+
+	expandedInput := mat.NewDense(inputSize+2, inputSize+2, nil)
+	expandedInput.Zero()
+
+	// copy data from input taking Padding into account
+	for i := 0; i < inputSize; i++ {
+		for j := 0; j < inputSize; j++ {
+			expandedInput.Set(i+1, j+1, input.At(i, j))
 		}
 	}
 
-	return output
+	for i := 0; i < s; i++ {
+		for j := 0; j < s; j++ {
+			value, err := Correlate2dOps(expandedInput.Slice(i, i+kernelSize, j, j+kernelSize), &kernel)
+			if err != nil {
+				return *mat.NewDense(1, 1, nil), err
+			}
+			output.Set(i, j, value)
+		}
+	}
+
+	return *output, nil
 }

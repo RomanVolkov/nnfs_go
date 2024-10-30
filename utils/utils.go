@@ -6,6 +6,7 @@ import (
 	"golang.org/x/image/draw"
 	"image"
 	"image/color"
+	"math"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -76,4 +77,16 @@ func NormalizeGrascaleImageData(img image.Image, invertColor bool) ([]float64, e
 	}
 
 	return data, nil
+}
+
+func MaxValue(values []float64, i, k, j, l, n int) float64 {
+	maxValue := float64(math.MinInt64)
+
+	for ii := i; ii <= k; ii++ {
+		for jj := j; jj <= l; jj++ {
+			maxValue = max(maxValue, values[ii*n+jj])
+		}
+	}
+
+	return maxValue
 }
