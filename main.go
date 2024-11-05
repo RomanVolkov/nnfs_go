@@ -6,6 +6,7 @@ import (
 	"log"
 	"main/dataset"
 	"main/model"
+	"main/models"
 	"main/utils"
 	"os"
 
@@ -13,7 +14,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-func main() {
+func testModelV1() {
 	dataProvider := model.JSONModelDataProvider{}
 	ds := dataset.FashionMNISTDataset{}
 
@@ -67,4 +68,10 @@ func main() {
 	fmt.Println(mat.Formatted(&predictions))
 	classIndex := floats.MaxIdx(predictions.RawMatrix().Data)
 	fmt.Println(classes[classIndex])
+
+}
+
+func main() {
+	models.LoadCnnModel()
+	// models.RunFashionCNNModel()
 }

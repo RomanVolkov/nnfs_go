@@ -34,10 +34,15 @@ func (provider *JSONModelDataProvider) Store(path string, model *Model) error {
 		var l *layer.DenseLayer = &layer.DenseLayer{}
 		var relu *activation.Activation_ReLU = &activation.Activation_ReLU{}
 		var softmax *activation.SoftmaxActivation = &activation.SoftmaxActivation{}
+		var convolution *layer.ConvolutionLayer = &layer.ConvolutionLayer{}
 
 		if reflect.TypeOf(item).String() == reflect.TypeOf(l).String() {
 			l, _ := item.(*layer.DenseLayer)
 			layersWraps = append(layersWraps, marshaling.LayerWrapper{DenseLayer: *l})
+		}
+		if reflect.TypeOf(item).String() == reflect.TypeOf(convolution).String() {
+			convolutionLayer, _ := item.(*layer.ConvolutionLayer)
+			layersWraps = append(layersWraps, marshaling.ConvolutionWrapper{ConvolutionLayer: *convolutionLayer})
 		}
 		if reflect.TypeOf(item).String() == reflect.TypeOf(relu).String() {
 			v := struct {
@@ -118,6 +123,17 @@ func (provider *JSONModelDataProvider) Load(path string) (*Model, error) {
 					err = json.Unmarshal(bd, &layerWrap)
 					layer := layer.DenseLayer{}
 					layer.LoadFromParams(&layerWrap.Weights, &layerWrap.Biases, layerWrap.L1, layerWrap.L2)
+					m.Add(&layer)
+				}
+				if layerData["type"] == reflect.TypeOf(layer.ConvolutionLayer{}).String() {
+					layerWrap := marshaling.ConvolutionWrapper{}
+					bd, err := json.Marshal(l)
+					if err != nil {
+						return nil, err
+					}
+					err = json.Unmarshal(bd, &layerWrap)
+					layer := layer.ConvolutionLayer{}
+					layer.LoadFromParams(layerWrap.InputShape, layerWrap.Depths, layerWrap.KernelSize, layerWrap.OutputShape, layerWrap.KernelShape, layerWrap.Kernels, layerWrap.Biases)
 					m.Add(&layer)
 				}
 				// decode activation.Activation_ReLU

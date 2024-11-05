@@ -8,31 +8,6 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type InputShape struct {
-	Depths int
-	Height int
-	Width  int
-}
-
-func (shape InputShape) TotalSize() int {
-	return shape.Depths * shape.Height * shape.Width
-}
-
-type KernelShape struct {
-	// defiens the total number of kernels
-	Depths int
-	// defines depths of kernel itself. E.g., for Grayscale input InputDepths == 1 while for RGB InputDepths == 3
-	InputDepths int
-	// kernelSize
-	Height int
-	// kernelSize
-	Width int
-}
-
-func (shape KernelShape) TotalSize() int {
-	return shape.Depths * shape.InputDepths * shape.Height * shape.Width
-}
-
 type ConvolutionLayer struct {
 	// shape of the input data. E.g., Grayscale image is (1, x, x); RGB is (3, x, x)
 	InputShape InputShape
@@ -70,9 +45,39 @@ type ConvolutionLayer struct {
 	// rows -> number of input samples
 	// cols -> should be of InputShape shape
 	DInputs mat.Dense
+
+	// derivatives to adjust Kernels
+	dKernels [][][]mat.Dense
+	// derivatives to adjust Biases
+	dvalues mat.Dense
 }
 
-func (layer *ConvolutionLayer) Initialization(inputShape InputShape, convolutionDepths int, kernelSize int) {
+type InputShape struct {
+	Depths int `json:"depths"`
+	Height int `json:"height"`
+	Width  int `json:"width"`
+}
+
+func (shape InputShape) TotalSize() int {
+	return shape.Depths * shape.Height * shape.Width
+}
+
+type KernelShape struct {
+	// defiens the total number of kernels
+	Depths int `json:"depths"`
+	// defines depths of kernel itself. E.g., for Grayscale input InputDepths == 1 while for RGB InputDepths == 3
+	InputDepths int `json:"input_depths"`
+	// kernelSize
+	Height int `json:"height"`
+	// kernelSize
+	Width int `json:"width"`
+}
+
+func (shape KernelShape) TotalSize() int {
+	return shape.Depths * shape.InputDepths * shape.Height * shape.Width
+}
+
+func (layer *ConvolutionLayer) Initialization(inputShape InputShape, convolutionDepths int, kernelSize int) *ConvolutionLayer {
 	// I will need
 	// 1. something that described input shape
 	// 2. depths of convolution == number of kernels
@@ -91,7 +96,7 @@ func (layer *ConvolutionLayer) Initialization(inputShape InputShape, convolution
 
 	layer.KernelShape = KernelShape{
 		Depths:      convolutionDepths,
-		InputDepths: layer.KernelShape.InputDepths,
+		InputDepths: inputShape.Depths,
 		Height:      kernelSize,
 		Width:       kernelSize,
 	}
@@ -125,6 +130,18 @@ func (layer *ConvolutionLayer) Initialization(inputShape InputShape, convolution
 			}
 		}
 	}
+
+	return layer
+}
+
+func (layer *ConvolutionLayer) LoadFromParams(inputShape InputShape, depths int, kernelSize int, outputShape InputShape, kernelShape KernelShape, kernels [][]mat.Dense, biases []mat.Dense) {
+	layer.InputShape = inputShape
+	layer.Depths = depths
+	layer.KernelSize = kernelSize
+	layer.OutputShape = outputShape
+	layer.KernelShape = kernelShape
+	layer.Kernels = kernels
+	layer.Biases = biases
 }
 
 func (layer *ConvolutionLayer) Forward(inputs *mat.Dense, isTraining bool) {
@@ -132,7 +149,7 @@ func (layer *ConvolutionLayer) Forward(inputs *mat.Dense, isTraining bool) {
 	inputSampleCount, _ := inputs.Dims()
 
 	// validate input shape
-	row := inputs.RawMatrix().Data
+	row := inputs.RawRowView(0)
 	if len(row) != layer.InputShape.TotalSize() {
 		log.Fatalf("Unexpected input size: %v with InputShape: %v", len(row), layer.InputShape)
 	}
@@ -144,7 +161,7 @@ func (layer *ConvolutionLayer) Forward(inputs *mat.Dense, isTraining bool) {
 	layer.Output = *mat.NewDense(inputSampleCount, layer.OutputShape.TotalSize(), nil)
 	layer.Output.Zero()
 
-	allBiases := layer.allBiases()
+	allBiases := layer.AllBiases()
 	if len(allBiases) != layer.OutputShape.TotalSize() {
 		log.Fatalf("Unexpected length of biases: %v with OutputShape: %v", len(allBiases), layer.OutputShape)
 	}
@@ -193,6 +210,7 @@ func (layer *ConvolutionLayer) Forward(inputs *mat.Dense, isTraining bool) {
 
 // dvalues comes form max pooling (well, via relu)
 func (layer *ConvolutionLayer) Backward(dvalues *mat.Dense) {
+	layer.dvalues = *mat.DenseCopyOf(dvalues)
 	// okay, now I can start building Backward pass
 	// 1. Init DInputs and DWeights (but I would not need to expose them as I will do weights adjustments right here)
 	// 2. Do valid and full cross-correlation
@@ -202,17 +220,23 @@ func (layer *ConvolutionLayer) Backward(dvalues *mat.Dense) {
 
 	// derivatives with respect to input
 	// we will use layer.DInputs directly, but it will require to write some index offet to write
-	layer.DInputs = *mat.NewDense(inputSampleCount, layer.OutputShape.TotalSize(), nil)
+	layer.DInputs = *mat.NewDense(inputSampleCount, layer.InputShape.TotalSize(), nil)
 	layer.DInputs.Zero()
 
 	// derivatives with respect to kernel values
 	// will need to adjust Kernels -> using the same data structure
-	DKernels := make([][]mat.Dense, layer.KernelShape.Depths)
-	for i := 0; i < layer.KernelShape.Depths; i++ {
-		DKernels[i] = make([]mat.Dense, layer.KernelShape.InputDepths)
-		for j := 0; j < layer.KernelShape.InputDepths; j++ {
-			DKernels[i][j] = *mat.DenseCopyOf(&layer.Kernels[i][j])
-			DKernels[i][j].Zero()
+
+	// layer.dKernels should have one more dimention equal to number of samples
+	// adjust params right inside `for k in 0..<inputSampleCount` loop
+	layer.dKernels = make([][][]mat.Dense, inputSampleCount)
+	for k := 0; k < inputSampleCount; k++ {
+		layer.dKernels[k] = make([][]mat.Dense, layer.KernelShape.Depths)
+		for i := 0; i < layer.KernelShape.Depths; i++ {
+			layer.dKernels[k][i] = make([]mat.Dense, layer.KernelShape.InputDepths)
+			for j := 0; j < layer.KernelShape.InputDepths; j++ {
+				layer.dKernels[k][i][j] = *mat.DenseCopyOf(&layer.Kernels[i][j])
+				layer.dKernels[k][i][j].Zero()
+			}
 		}
 	}
 
@@ -228,21 +252,73 @@ func (layer *ConvolutionLayer) Backward(dvalues *mat.Dense) {
 
 				// valid cross-correlation between input channel j and dvalues i -> Conv::Depths * Input::Depths results
 				// for input channel I have inputSample[i]
-				// DKernels[i][j] =
-				ops.Correlate2dValid(inputSample[j], dvalue[i])
+				validCorrelateResult, err := ops.Correlate2dValid(inputSample[j], dvalue[i])
+				if err != nil {
+					log.Fatal(err)
+				}
+				layer.dKernels[k][i][j] = validCorrelateResult
 
 				// full cross-correlation between i-th dvalue and [i][j] Kernel values
 				// layer.DInputs =
-				ops.Correlate2DFull(dvalue[i], layer.Kernels[i][j])
+				fullCorrelateResult, err := ops.Correlate2DFull(dvalue[i], layer.Kernels[i][j])
+				if err != nil {
+					log.Fatal(err)
+				}
 
-				// TODO: write the result into DInputs and DKernels
+				// Now the question how to write stuff  into DInputs
+				// as layer.Dinputs is 2D array where one row will contain all the values
+				// one row has shape on InputShape (as it corresponds to input data)
+				// We need to sum fullCorrelateResult into dinputs[j] (so conv depths number of times for each input data channel)
+				// To do this, we need a way to calculate a slices from layer.DInputs.Row(j)
+				data := fullCorrelateResult.RawMatrix().Data
+				startI := j * layer.InputShape.Width * layer.InputShape.Height
+				// Sum dinput values according to input channel
+				for ii := 0; ii < len(data); ii++ {
+					idx := startI + ii
+					v := layer.DInputs.At(k, idx)
+					layer.DInputs.Set(k, idx, v+data[i])
+				}
 			}
 		}
 
-		// TODO:
-		// get current learning rate
-		// adjust kernels
-		// adjust biases
+		// So now I can adjust kernel values and biases after we calculated all derivatives for all input samples
+		// Question is - where to get current learning rate?
+		// One way would be to change the Backward func, but in that case it won't fit LayersInterface anymore
+		// and Go cannot provide func overload
+		// So, another way would be to pass current learning rate inside layer with some additional func (or pass optimiser)
+
+		// Since we havce several samples here we will use a loop via all of them and adjust params here
+
+		// Looks like we need to call params adjust after optimizer PreUpdate, as some of them changes learning rate
+
+	}
+}
+
+func (layer *ConvolutionLayer) UpdateParams(learningRate float64) {
+	// going via all used samples during Backward
+	for k := 0; k < len(layer.dKernels); k++ {
+		dKernelValues := layer.dKernels[k]
+
+		for i := 0; i < len(layer.Kernels); i++ {
+			for j := 0; j < len(layer.Kernels[i]); j++ {
+				tmp := mat.DenseCopyOf(&dKernelValues[i][j])
+				// adjusting derivatives by current learningRate
+				tmp.Scale(learningRate, &dKernelValues[i][j])
+				// adjusting Kernel values
+				layer.Kernels[i][j].Sub(&layer.Kernels[i][j], tmp)
+			}
+		}
+
+		dBiasesValues := layer.dvalues.RawRowView(k)
+		for bI := 0; bI < len(layer.Biases); bI++ {
+			startI := bI * layer.OutputShape.Height * layer.OutputShape.Width
+			biasData := layer.Biases[bI].RawMatrix()
+			for ii := 0; ii < len(biasData.Data); ii++ {
+				// TODO: check if values are actually changed in layer.Biases
+				biasData.Data[ii] = biasData.Data[ii] - dBiasesValues[startI+ii]*learningRate
+			}
+			layer.Biases[bI].SetRawMatrix(biasData)
+		}
 	}
 }
 
@@ -261,14 +337,14 @@ func (layer *ConvolutionLayer) GetOutput() *mat.Dense {
 }
 
 func (layer *ConvolutionLayer) GetDInputs() *mat.Dense {
-	panic(1)
+	return &layer.DInputs
 }
 
 // Utils
 
 // flattens all Biases into 1D array
 // used to copy these values into initial Output row
-func (layer *ConvolutionLayer) allBiases() []float64 {
+func (layer *ConvolutionLayer) AllBiases() []float64 {
 	all := make([]float64, 0)
 	for i := 0; i < len(layer.Biases); i++ {
 		all = append(all, layer.Biases[i].RawMatrix().Data...)

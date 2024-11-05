@@ -127,17 +127,20 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 			predictions := m.outputLayerActivation.Predictions(output)
 			accuracy := accuracy.CalculateAccuracy(m.Accuracy, &predictions, &batchY)
 
-			// TODO: do I need this still?
-			// or loss funciton holds refereces to actual data?
 			m.passTrainableLayer()
 
 			m.Backward(*output, batchY)
 
 			m.Optimizer.PreUpdate()
 			for _, item := range m.Layers {
-				layer, ok := item.(*layer.DenseLayer)
+				denseLayer, ok := item.(*layer.DenseLayer)
 				if ok {
-					m.Optimizer.UpdateParams(layer)
+					m.Optimizer.UpdateParams(denseLayer)
+				}
+
+				convLayer, ok := item.(*layer.ConvolutionLayer)
+				if ok {
+					convLayer.UpdateParams(m.Optimizer.GetCurrentLearningRate())
 				}
 			}
 
