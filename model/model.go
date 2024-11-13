@@ -13,6 +13,7 @@ import (
 )
 
 type Model struct {
+	Name      string
 	Layers    []layer.LayerInterface
 	Loss      loss.LossInterface
 	Optimizer optimizer.OptimizerInterface
@@ -62,11 +63,15 @@ func (m *Model) Finalize() {
 }
 
 func (m *Model) Description() {
+	fmt.Println("Name:", m.Name)
+	fmt.Println("Layers: ")
 	for _, l := range m.Layers {
 		fmt.Print(l.Name(), ", ")
 	}
 	fmt.Println()
+	fmt.Println("Loss: ")
 	fmt.Println(m.Loss.Name())
+	fmt.Println("Optimizer: ")
 	fmt.Println(m.Optimizer.Name())
 }
 
@@ -99,7 +104,7 @@ func (m *Model) Backward(output mat.Dense, target mat.Dense) {
 
 func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printEvery int, validationData *ModelData) {
 	fmt.Println("================================")
-	fmt.Println("Training")
+	fmt.Println(m.Name, "Training")
 	m.Accuracy.Initialization(&trainingData.Y)
 
 	// default value if batch size is nil
@@ -111,7 +116,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 	}
 
 	for epoch := 0; epoch < epochs+1; epoch++ {
-		fmt.Println("Epoch", epoch)
+		fmt.Println(m.Name, "Epoch", epoch)
 
 		m.Loss.ResetAccumulated()
 		m.Accuracy.ResetAccumulated()
@@ -147,7 +152,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 			m.Optimizer.PostUpdate()
 
 			if step%printEvery == 0 || step == trainSteps-1 {
-				fmt.Println("step:", step, "\n",
+				fmt.Println(m.Name, "step:", step, "\n",
 					"loss:", lossValue,
 					"(data loss:", dataLoss, "reg loss:", regularizationLoss, ") ",
 					"acc:", accuracy,
@@ -159,7 +164,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 		epochRegularisationLoss := m.Loss.RegularizationLoss()
 		epochLoss := epochDataLoss + epochRegularisationLoss
 		epochAccuracy := m.Accuracy.CalculateAccumulatedAccuracy()
-		fmt.Println("training, ",
+		fmt.Println(m.Name, "training, ",
 			"loss:", epochLoss,
 			"(data_loss:", epochDataLoss, "reg_loss:", epochRegularisationLoss, ") ",
 			"acc:", epochAccuracy,
@@ -172,8 +177,7 @@ func (m *Model) Train(trainingData ModelData, epochs int, batchSize *int, printE
 }
 
 func (m *Model) Evaluate(data ModelData, batchSize *int) {
-	fmt.Println("================================")
-	fmt.Println("Evaluation")
+	fmt.Println(m.Name, "Evaluation")
 	validationSteps := 1
 	if batchSize != nil {
 		validationSteps = calculateSteps(data, *batchSize)
@@ -193,7 +197,7 @@ func (m *Model) Evaluate(data ModelData, batchSize *int) {
 	}
 	valLoss := m.Loss.CalculateAccumulatedLoss()
 	valAccuracy := m.Accuracy.CalculateAccumulatedAccuracy()
-	fmt.Println("validation:", "loss:", valLoss, "accuracy:", valAccuracy)
+	fmt.Println(m.Name, "validation:", "loss:", valLoss, "accuracy:", valAccuracy)
 }
 
 func (m *Model) Predict(inputSamples *mat.Dense, batchSize *int) mat.Dense {

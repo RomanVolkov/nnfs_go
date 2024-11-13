@@ -72,6 +72,6 @@ func testModelV1() {
 }
 
 func main() {
-	models.LoadCnnModel()
-	// models.RunFashionCNNModel()
+	models.LoadModels()
+	// models.TrainModels()
 }

@@ -7,11 +7,11 @@ import (
 )
 
 type OptimizerSGD struct {
-	CurrentLearningRate float64
-	LearningRate        float64
-	Decay               float64
-	Momentum            float64
-	iterations          int
+	CurrentLearningRate float64 `json:"CurrentLearningRate"`
+	LearningRate        float64 `json:"LearningRate"`
+	Decay               float64 `json:"Decay"`
+	Momentum            float64 `json:"Momentum"`
+	Iterations          int     `json:"Iterations"`
 }
 
 func NewSGD(learningRate float64, decay float64, momentum float64) OptimizerSGD {
@@ -20,7 +20,7 @@ func NewSGD(learningRate float64, decay float64, momentum float64) OptimizerSGD 
 		LearningRate:        learningRate,
 		Decay:               decay,
 		Momentum:            momentum,
-		iterations:          0,
+		Iterations:          0,
 	}
 }
 
@@ -30,7 +30,7 @@ func (a *OptimizerSGD) Name() string {
 
 func (optimizer *OptimizerSGD) PreUpdate() {
 	if optimizer.Decay > 0.0 {
-		optimizer.CurrentLearningRate = optimizer.LearningRate * (1.0 / (1.0 + optimizer.Decay*float64(optimizer.iterations)))
+		optimizer.CurrentLearningRate = optimizer.LearningRate * (1.0 / (1.0 + optimizer.Decay*float64(optimizer.Iterations)))
 	}
 }
 
@@ -71,7 +71,7 @@ func (optimizer *OptimizerSGD) UpdateParams(layer *layer.DenseLayer) {
 }
 
 func (optimizer *OptimizerSGD) PostUpdate() {
-	optimizer.iterations += 1
+	optimizer.Iterations += 1
 }
 
 func (optimizer *OptimizerSGD) GetCurrentLearningRate() float64 {

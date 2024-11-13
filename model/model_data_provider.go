@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"main/accuracy"
 	"main/activation"
 	"main/layer"
@@ -34,31 +35,38 @@ func (provider *JSONModelDataProvider) Store(path string, model *Model) error {
 		var l *layer.DenseLayer = &layer.DenseLayer{}
 		var relu *activation.Activation_ReLU = &activation.Activation_ReLU{}
 		var softmax *activation.SoftmaxActivation = &activation.SoftmaxActivation{}
+		var sigmoid *activation.SigmoidActivation = &activation.SigmoidActivation{}
 		var convolution *layer.ConvolutionLayer = &layer.ConvolutionLayer{}
 
 		if reflect.TypeOf(item).String() == reflect.TypeOf(l).String() {
 			l, _ := item.(*layer.DenseLayer)
 			layersWraps = append(layersWraps, marshaling.LayerWrapper{DenseLayer: *l})
-		}
-		if reflect.TypeOf(item).String() == reflect.TypeOf(convolution).String() {
+		} else if reflect.TypeOf(item).String() == reflect.TypeOf(convolution).String() {
 			convolutionLayer, _ := item.(*layer.ConvolutionLayer)
 			layersWraps = append(layersWraps, marshaling.ConvolutionWrapper{ConvolutionLayer: *convolutionLayer})
-		}
-		if reflect.TypeOf(item).String() == reflect.TypeOf(relu).String() {
+		} else if reflect.TypeOf(item).String() == reflect.TypeOf(relu).String() {
 			v := struct {
 				Type string `json:"type"`
 			}{
 				Type: reflect.TypeOf(item).String(),
 			}
 			layersWraps = append(layersWraps, v)
-		}
-		if reflect.TypeOf(item).String() == reflect.TypeOf(softmax).String() {
+		} else if reflect.TypeOf(item).String() == reflect.TypeOf(softmax).String() {
 			v := struct {
 				Type string `json:"type"`
 			}{
 				Type: reflect.TypeOf(item).String(),
 			}
 			layersWraps = append(layersWraps, v)
+		} else if reflect.TypeOf(item).String() == reflect.TypeOf(sigmoid).String() {
+			v := struct {
+				Type string `json:"type"`
+			}{
+				Type: reflect.TypeOf(item).String(),
+			}
+			layersWraps = append(layersWraps, v)
+		} else {
+			log.Fatalf("Unknown type: %v", reflect.TypeOf(item).String())
 		}
 	}
 
@@ -149,6 +157,13 @@ func (provider *JSONModelDataProvider) Load(path string) (*Model, error) {
 					a := activation.SoftmaxActivation{}
 					m.Add(&a)
 				}
+
+				// decode SigmoidActivation
+				var sigmoid *activation.SigmoidActivation = &activation.SigmoidActivation{}
+				if layerData["type"] == reflect.TypeOf(sigmoid).String() {
+					a := activation.SigmoidActivation{}
+					m.Add(&a)
+				}
 			} else {
 				return nil, errors.New("failed to typecase layerData")
 			}
@@ -188,6 +203,17 @@ func (provider *JSONModelDataProvider) Load(path string) (*Model, error) {
 			return nil, err
 		}
 		wrap := optimizer.OptimizerAdam{}
+		err = json.Unmarshal(d, &wrap)
+		if err != nil {
+			return nil, err
+		}
+		optimizerValue = &wrap
+	case reflect.TypeOf(&optimizer.OptimizerSGD{}).String():
+		d, err := json.Marshal(optimizerDict["data"])
+		if err != nil {
+			return nil, err
+		}
+		wrap := optimizer.OptimizerSGD{}
 		err = json.Unmarshal(d, &wrap)
 		if err != nil {
 			return nil, err

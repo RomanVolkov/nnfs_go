@@ -112,7 +112,7 @@ func (layer *ConvolutionLayer) Initialization(inputShape InputShape, convolution
 			r, c := layer.Kernels[i][j].Dims()
 			for ii := 0; ii < r; ii++ {
 				for jj := 0; jj < c; jj++ {
-					layer.Kernels[i][j].Set(ii, jj, rand.NormFloat64()*0.01)
+					layer.Kernels[i][j].Set(ii, jj, rand.NormFloat64())
 				}
 			}
 		}
@@ -126,7 +126,7 @@ func (layer *ConvolutionLayer) Initialization(inputShape InputShape, convolution
 		r, c := layer.Biases[i].Dims()
 		for ii := 0; ii < r; ii++ {
 			for jj := 0; jj < c; jj++ {
-				layer.Biases[i].Set(ii, jj, rand.NormFloat64()*0.01)
+				layer.Biases[i].Set(ii, jj, rand.NormFloat64())
 			}
 		}
 	}
@@ -197,9 +197,10 @@ func (layer *ConvolutionLayer) Forward(inputs *mat.Dense, isTraining bool) {
 
 				// since Output is stored as 1D array it will be easier to do sum
 				rawConvResult := convResult.RawMatrix().Data
-				for k := 0; k < len(rawConvResult); k++ {
-					outputIdx := i*layer.OutputShape.Height*layer.OutputShape.Width + k
-					layer.Output.Set(i, outputIdx, rawConvResult[k])
+				for rawI := 0; rawI < len(rawConvResult); rawI++ {
+					outputIdx := i*layer.OutputShape.Height*layer.OutputShape.Width + rawI
+					prevValue := layer.Output.At(k, outputIdx)
+					layer.Output.Set(k, outputIdx, prevValue+rawConvResult[rawI])
 				}
 			}
 		}
