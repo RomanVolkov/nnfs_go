@@ -72,6 +72,6 @@ func testModelV1() {
 }
 
 func main() {
+	models.TrainModels()
 	models.LoadModels()
-	// models.TrainModels()
 }

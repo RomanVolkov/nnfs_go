@@ -40,7 +40,7 @@ func createCNNOneLayerModel() *model.Model {
 	m.Name = "CNN - 1"
 
 	inputImageShape := layer.InputShape{Depths: 1, Height: 28, Width: 28}
-	cnnLayer := (&layer.ConvolutionLayer{}).Initialization(inputImageShape, 3, 3)
+	cnnLayer := (&layer.ConvolutionLayer{}).Initialization(inputImageShape, 3, 5)
 	m.Add(cnnLayer)
 	m.Add(&activation.SigmoidActivation{})
 
@@ -55,7 +55,7 @@ func createCNNOneLayerModel() *model.Model {
 
 	// o := optimizer.NewSGD(0.5, 1e-3, 0)
 	o := optimizer.NewAdam()
-	o.Decay = 1e-3
+	o.Decay = 1e-5
 
 	m.Set(&loss.CategoricalCrossentropyLoss{}, &o, &accuracy.CategorialAccuracy{})
 	m.Finalize()
@@ -67,7 +67,7 @@ func createCNNTwoLayerModel() *model.Model {
 	m.Name = "CNN - 2"
 
 	inputImageShape := layer.InputShape{Depths: 1, Height: 28, Width: 28}
-	cnnLayer1 := (&layer.ConvolutionLayer{}).Initialization(inputImageShape, 3, 3)
+	cnnLayer1 := (&layer.ConvolutionLayer{}).Initialization(inputImageShape, 3, 5)
 	m.Add(cnnLayer1)
 	m.Add(&activation.SigmoidActivation{})
 
@@ -78,12 +78,50 @@ func createCNNTwoLayerModel() *model.Model {
 	m.Add((&layer.DenseLayer{}).Initialization(cnnLayer2.OutputShape.TotalSize(), 128))
 	m.Add(&activation.Activation_ReLU{})
 
+	m.Add((&layer.DenseLayer{}).Initialization(128, 128))
+	m.Add(&activation.Activation_ReLU{})
+
 	m.Add((&layer.DenseLayer{}).Initialization(128, 10))
 	m.Add(&activation.SoftmaxActivation{})
 
 	// o := optimizer.NewSGD(0.5, 1e-3, 0)
 	o := optimizer.NewAdam()
-	o.Decay = 1e-3
+	o.Decay = 1e-5
+
+	m.Set(&loss.CategoricalCrossentropyLoss{}, &o, &accuracy.CategorialAccuracy{})
+	m.Finalize()
+	return m
+}
+
+// https://github.com/guilhermedom/cnn-fashion-mnist/blob/main/notebooks/1.0-gdfs-cnn-fashion-mnist.ipynb
+func createCNNBigModel() *model.Model {
+	m := &model.Model{}
+	m.Name = "CNN - Big"
+
+	inputImageShape := layer.InputShape{Depths: 1, Height: 28, Width: 28}
+	cnnLayer1 := (&layer.ConvolutionLayer{}).Initialization(inputImageShape, 32, 3)
+	m.Add(cnnLayer1)
+	m.Add(&activation.Activation_ReLU{})
+
+	cnnLayer2 := (&layer.ConvolutionLayer{}).Initialization(cnnLayer1.OutputShape, 64, 3)
+	m.Add(cnnLayer2)
+	m.Add(&activation.Activation_ReLU{})
+
+	m.Add((&layer.DenseLayer{}).Initialization(cnnLayer2.OutputShape.TotalSize(), 250))
+	m.Add(&activation.Activation_ReLU{})
+
+	m.Add((&layer.DenseLayer{}).Initialization(250, 125))
+	m.Add(&activation.Activation_ReLU{})
+
+	m.Add((&layer.DenseLayer{}).Initialization(125, 60))
+	m.Add(&activation.Activation_ReLU{})
+
+	m.Add((&layer.DenseLayer{}).Initialization(60, 10))
+	m.Add(&activation.SoftmaxActivation{})
+
+	// o := optimizer.NewSGD(0.5, 1e-3, 0)
+	o := optimizer.NewAdam()
+	o.Decay = 1e-5
 
 	m.Set(&loss.CategoricalCrossentropyLoss{}, &o, &accuracy.CategorialAccuracy{})
 	m.Finalize()
@@ -91,7 +129,7 @@ func createCNNTwoLayerModel() *model.Model {
 }
 
 // Loads FashionMNISTDataset and runs Train process for input model
-func trainModeAndStore(m *model.Model, path string) error {
+func trainModeAndStore(m *model.Model, path string, epochs int) error {
 	if m == nil {
 		return errors.New("Missing model")
 	}
@@ -110,8 +148,7 @@ func trainModeAndStore(m *model.Model, path string) error {
 
 	trainingData := model.ModelData{X: *x, Y: *y}
 	validationData := model.ModelData{X: *x_val, Y: *y_val}
-	// let's use 5 epochs for all models here
-	epochs := 5
+
 	batchSize := 128
 	m.Train(trainingData, epochs, &batchSize, 100, &validationData)
 	m.Evaluate(validationData, &batchSize)
@@ -140,19 +177,25 @@ func TrainModels() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		trainModeAndStore(createDenseModel(numInputs), "./assets/fashion-dense.json")
+		trainModeAndStore(createDenseModel(numInputs), "./assets/fashion-dense.json", 10)
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		trainModeAndStore(createCNNOneLayerModel(), "./assets/fashion-cnn-1.json")
+		trainModeAndStore(createCNNOneLayerModel(), "./assets/fashion-cnn-1.json", 20)
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		trainModeAndStore(createCNNTwoLayerModel(), "./assets/fashion-cnn-2.json")
+		trainModeAndStore(createCNNTwoLayerModel(), "./assets/fashion-cnn-2.json", 20)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		trainModeAndStore(createCNNBigModel(), "./assets/fashion-cnn-big.json", 20)
 	}()
 
 	wg.Wait()
@@ -171,6 +214,11 @@ func LoadModels() {
 	}
 
 	cnn2Model, err := dataProvider.Load("./assets/fashion-cnn-2.json")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	cnnBigModel, err := dataProvider.Load("./assets/fashion-cnn-big.json")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -194,6 +242,10 @@ func LoadModels() {
 	fmt.Println()
 	fmt.Println("CNN-2")
 	cnn2Model.Evaluate(validationData, &batchSize)
+
+	fmt.Println()
+	fmt.Println("CNN-Big")
+	cnnBigModel.Evaluate(validationData, &batchSize)
 
 	fmt.Println()
 	fmt.Println("Dense")
