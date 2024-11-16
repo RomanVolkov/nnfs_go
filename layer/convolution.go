@@ -4,6 +4,7 @@ import (
 	"log"
 	"main/ops"
 	"math/rand"
+	"sync"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -171,40 +172,52 @@ func (layer *ConvolutionLayer) Forward(inputs *mat.Dense, isTraining bool) {
 		layer.Output.SetRow(i, allBiases)
 	}
 
+	wg := sync.WaitGroup{}
+	m := sync.Mutex{}
+
 	// going thought all input samples
 	for k := 0; k < inputSampleCount; k++ {
-		// for convenience raw data from one sample from inputs is converted according to InputShape
-		inputSample := layer.ConvertSampleData(inputs.RawRowView(k), layer.InputShape)
+		wg.Add(1)
+		go func(layer *ConvolutionLayer, m *sync.Mutex, k int) {
+			defer wg.Done()
 
-		// going thought all kernels within convolution layer
-		for i := 0; i < layer.KernelShape.Depths; i++ {
-			// going via all sub-kernels (values from 1 kernel for each input channel)
-			for j := 0; j < layer.KernelShape.InputDepths; j++ {
-				// convolution result for every sub-kernel
-				convResult, err := ops.Correlate2dValid(inputSample[j], layer.Kernels[i][j])
-				if err != nil {
-					log.Fatal(err)
-				}
+			// for convenience raw data from one sample from inputs is converted according to InputShape
+			inputSample := layer.ConvertSampleData(inputs.RawRowView(k), layer.InputShape)
 
-				// Output has OutputShape. Meaning we have number of outputs for specific sample equal to depths of convolution
-				// so the layer.Output row will be OutputShape.TotalSize(): depths * output size
-				// convResult will be used for the same output InputDepths number of times.
-				// e.g., we will write into the same self.output[i] (python) that many times as input data has input channels
+			// going thought all kernels within convolution layer
+			for i := 0; i < layer.KernelShape.Depths; i++ {
+				// going via all sub-kernels (values from 1 kernel for each input channel)
+				for j := 0; j < layer.KernelShape.InputDepths; j++ {
+					// convolution result for every sub-kernel
+					convResult, err := ops.Correlate2dValid(inputSample[j], layer.Kernels[i][j])
+					if err != nil {
+						log.Fatal(err)
+					}
 
-				// so here I need to sum convResult into layer.Output.Row(i)[slice for i-th output]
-				// in total this operation will happen ConvolutionLayer::depths * InputShape::Depths ->
-				// depths of convolution layer * depths of input data (e.g, 1 for Grayscale; 3 for RGB)
+					// Output has OutputShape. Meaning we have number of outputs for specific sample equal to depths of convolution
+					// so the layer.Output row will be OutputShape.TotalSize(): depths * output size
+					// convResult will be used for the same output InputDepths number of times.
+					// e.g., we will write into the same self.output[i] (python) that many times as input data has input channels
 
-				// since Output is stored as 1D array it will be easier to do sum
-				rawConvResult := convResult.RawMatrix().Data
-				for rawI := 0; rawI < len(rawConvResult); rawI++ {
-					outputIdx := i*layer.OutputShape.Height*layer.OutputShape.Width + rawI
-					prevValue := layer.Output.At(k, outputIdx)
-					layer.Output.Set(k, outputIdx, prevValue+rawConvResult[rawI])
+					// so here I need to sum convResult into layer.Output.Row(i)[slice for i-th output]
+					// in total this operation will happen ConvolutionLayer::depths * InputShape::Depths ->
+					// depths of convolution layer * depths of input data (e.g, 1 for Grayscale; 3 for RGB)
+
+					// since Output is stored as 1D array it will be easier to do sum
+					rawConvResult := convResult.RawMatrix().Data
+					m.Lock()
+					for rawI := 0; rawI < len(rawConvResult); rawI++ {
+						outputIdx := i*layer.OutputShape.Height*layer.OutputShape.Width + rawI
+						prevValue := layer.Output.At(k, outputIdx)
+						layer.Output.Set(k, outputIdx, prevValue+rawConvResult[rawI])
+					}
+					m.Unlock()
 				}
 			}
-		}
+		}(layer, &m, k)
 	}
+
+	wg.Wait()
 
 	// Output shape will be number of input samples * layer.OutputShape.TotalSize()
 }
@@ -241,58 +254,58 @@ func (layer *ConvolutionLayer) Backward(dvalues *mat.Dense) {
 		}
 	}
 
+	wg := sync.WaitGroup{}
+	m := sync.Mutex{}
+
 	// going thought all input samples
 	for k := 0; k < inputSampleCount; k++ {
-		inputSample := layer.ConvertSampleData(layer.Inputs.RawRowView(k), layer.InputShape)
-		// dvalues for current sample
-		dvalue := layer.ConvertSampleData(dvalues.RawRowView(k), layer.OutputShape)
-		// going thought all kernels within convolution layer
-		for i := 0; i < layer.KernelShape.Depths; i++ {
-			// going via all sub-kernels (values from 1 kernel for each input channel)
-			for j := 0; j < layer.KernelShape.InputDepths; j++ {
+		wg.Add(1)
+		go func(layer *ConvolutionLayer, m *sync.Mutex, k int) {
+			defer wg.Done()
 
-				// valid cross-correlation between input channel j and dvalues i -> Conv::Depths * Input::Depths results
-				// for input channel I have inputSample[i]
-				validCorrelateResult, err := ops.Correlate2dValid(inputSample[j], dvalue[i])
-				if err != nil {
-					log.Fatal(err)
-				}
-				layer.dKernels[k][i][j] = validCorrelateResult
+			inputSample := layer.ConvertSampleData(layer.Inputs.RawRowView(k), layer.InputShape)
+			// dvalues for current sample
+			dvalue := layer.ConvertSampleData(dvalues.RawRowView(k), layer.OutputShape)
+			// going thought all kernels within convolution layer
+			for i := 0; i < layer.KernelShape.Depths; i++ {
+				// going via all sub-kernels (values from 1 kernel for each input channel)
+				for j := 0; j < layer.KernelShape.InputDepths; j++ {
 
-				// full cross-correlation between i-th dvalue and [i][j] Kernel values
-				// layer.DInputs =
-				fullCorrelateResult, err := ops.Correlate2DFull(dvalue[i], layer.Kernels[i][j])
-				if err != nil {
-					log.Fatal(err)
-				}
+					// valid cross-correlation between input channel j and dvalues i -> Conv::Depths * Input::Depths results
+					// for input channel I have inputSample[i]
+					validCorrelateResult, err := ops.Correlate2dValid(inputSample[j], dvalue[i])
+					if err != nil {
+						log.Fatal(err)
+					}
 
-				// Now the question how to write stuff  into DInputs
-				// as layer.Dinputs is 2D array where one row will contain all the values
-				// one row has shape on InputShape (as it corresponds to input data)
-				// We need to sum fullCorrelateResult into dinputs[j] (so conv depths number of times for each input data channel)
-				// To do this, we need a way to calculate a slices from layer.DInputs.Row(j)
-				data := fullCorrelateResult.RawMatrix().Data
-				startI := j * layer.InputShape.Width * layer.InputShape.Height
-				// Sum dinput values according to input channel
-				for ii := 0; ii < len(data); ii++ {
-					idx := startI + ii
-					v := layer.DInputs.At(k, idx)
-					layer.DInputs.Set(k, idx, v+data[i])
+					// full cross-correlation between i-th dvalue and [i][j] Kernel values
+					// layer.DInputs =
+					fullCorrelateResult, err := ops.Correlate2DFull(dvalue[i], layer.Kernels[i][j])
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					m.Lock()
+					layer.dKernels[k][i][j] = validCorrelateResult
+					// Now the question how to write stuff  into DInputs
+					// as layer.Dinputs is 2D array where one row will contain all the values
+					// one row has shape on InputShape (as it corresponds to input data)
+					// We need to sum fullCorrelateResult into dinputs[j] (so conv depths number of times for each input data channel)
+					// To do this, we need a way to calculate a slices from layer.DInputs.Row(j)
+					data := fullCorrelateResult.RawMatrix().Data
+					startI := j * layer.InputShape.Width * layer.InputShape.Height
+					// Sum dinput values according to input channel
+					for ii := 0; ii < len(data); ii++ {
+						idx := startI + ii
+						v := layer.DInputs.At(k, idx)
+						layer.DInputs.Set(k, idx, v+data[i])
+					}
+					m.Unlock()
 				}
 			}
-		}
-
-		// So now I can adjust kernel values and biases after we calculated all derivatives for all input samples
-		// Question is - where to get current learning rate?
-		// One way would be to change the Backward func, but in that case it won't fit LayersInterface anymore
-		// and Go cannot provide func overload
-		// So, another way would be to pass current learning rate inside layer with some additional func (or pass optimiser)
-
-		// Since we havce several samples here we will use a loop via all of them and adjust params here
-
-		// Looks like we need to call params adjust after optimizer PreUpdate, as some of them changes learning rate
-
+		}(layer, &m, k)
 	}
+	wg.Wait()
 }
 
 func (layer *ConvolutionLayer) UpdateParams(learningRate float64) {
