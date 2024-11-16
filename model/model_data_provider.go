@@ -79,11 +79,13 @@ func (provider *JSONModelDataProvider) Store(path string, model *Model) error {
 	}
 
 	root := struct {
+		Name      string        `json:"name"`
 		Layers    []interface{} `json:"layers"`
 		Loss      string        `json:"loss"`
 		Accuracy  string        `json:"accuracy"`
 		Optimizer interface{}   `json:"optimizer"`
 	}{
+		Name:      model.Name,
 		Layers:    layersWraps,
 		Loss:      reflect.TypeOf(model.Loss).String(),
 		Accuracy:  reflect.TypeOf(model.Accuracy).String(),
@@ -115,6 +117,8 @@ func (provider *JSONModelDataProvider) Load(path string) (*Model, error) {
 	json.Unmarshal(data, &dict)
 
 	m := Model{}
+	name, _ := dict["name"].(string)
+	m.Name = name
 
 	layers, ok := dict["layers"].([]interface{})
 	if ok {
