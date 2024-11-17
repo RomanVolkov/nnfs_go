@@ -182,7 +182,7 @@ func (layer *ConvolutionLayer) Forward(inputs *mat.Dense, isTraining bool) {
 			defer wg.Done()
 
 			// for convenience raw data from one sample from inputs is converted according to InputShape
-			inputSample := layer.ConvertSampleData(inputs.RawRowView(k), layer.InputShape)
+			inputSample := ConvertSampleData(inputs.RawRowView(k), layer.InputShape)
 
 			// going thought all kernels within convolution layer
 			for i := 0; i < layer.KernelShape.Depths; i++ {
@@ -263,9 +263,9 @@ func (layer *ConvolutionLayer) Backward(dvalues *mat.Dense) {
 		go func(layer *ConvolutionLayer, m *sync.Mutex, k int) {
 			defer wg.Done()
 
-			inputSample := layer.ConvertSampleData(layer.Inputs.RawRowView(k), layer.InputShape)
+			inputSample := ConvertSampleData(layer.Inputs.RawRowView(k), layer.InputShape)
 			// dvalues for current sample
-			dvalue := layer.ConvertSampleData(dvalues.RawRowView(k), layer.OutputShape)
+			dvalue := ConvertSampleData(dvalues.RawRowView(k), layer.OutputShape)
 			// going thought all kernels within convolution layer
 			for i := 0; i < layer.KernelShape.Depths; i++ {
 				// going via all sub-kernels (values from 1 kernel for each input channel)
@@ -364,18 +364,4 @@ func (layer *ConvolutionLayer) AllBiases() []float64 {
 		all = append(all, layer.Biases[i].RawMatrix().Data...)
 	}
 	return all
-}
-
-// takes raw data from one sample for inputs and slices it according to InputShape
-// e.g., Grayscake will return one mat.Dense
-// RGB - len == 3
-func (layer *ConvolutionLayer) ConvertSampleData(inputRawData []float64, shape InputShape) []mat.Dense {
-	// TODO: add test for this func
-	data := make([]mat.Dense, shape.Depths)
-	for k := 0; k < shape.Depths; k++ {
-		slice := inputRawData[k*shape.Height*shape.Width : (k+1)*shape.Height*shape.Width]
-		data[k] = *mat.NewDense(shape.Height, shape.Width, slice)
-	}
-
-	return data
 }
