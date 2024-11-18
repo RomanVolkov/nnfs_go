@@ -123,6 +123,17 @@ func createCNNTwoLayerModel() *model.Model {
 }
 
 // https://github.com/guilhermedom/cnn-fashion-mnist/blob/main/notebooks/1.0-gdfs-cnn-fashion-mnist.ipynb
+// cnn_model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)))
+// cnn_model.add(layers.MaxPool2D(pool_size=(2, 2)))
+// cnn_model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+// cnn_model.add(layers.MaxPool2D(pool_size=(2, 2)))
+// cnn_model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+// cnn_model.add(layers.Flatten())
+// cnn_model.add(layers.Dense(250, activation='relu'))
+// cnn_model.add(layers.Dense(125, activation='relu'))
+// cnn_model.add(layers.Dense(60, activation='relu'))
+// cnn_model.add(layers.Dense(10, activation='softmax'))
+
 func createCNNBigModel() *model.Model {
 	m := &model.Model{}
 	m.Name = "CNN - Big"
@@ -137,8 +148,16 @@ func createCNNBigModel() *model.Model {
 	cnnLayer2 := (&layer.ConvolutionLayer{}).Initialization(maxPooling1.OutputShape, 64, 3)
 	m.Add(cnnLayer2)
 	m.Add(&activation.Activation_ReLU{})
+	maxPooling2 := (&layer.MaxPoolingLayer{}).Initialization(cnnLayer2.OutputShape, 2)
+	m.Add(maxPooling2)
 
-	m.Add((&layer.DenseLayer{}).Initialization(cnnLayer2.OutputShape.TotalSize(), 250))
+	// cnnLayer3 := (&layer.ConvolutionLayer{}).Initialization(maxPooling2.OutputShape, 64, 3)
+	// m.Add(cnnLayer3)
+	// m.Add(&activation.Activation_ReLU{})
+	// maxPooling3 := (&layer.MaxPoolingLayer{}).Initialization(cnnLayer3.OutputShape, 2)
+	// m.Add(maxPooling3)
+
+	m.Add((&layer.DenseLayer{}).Initialization(maxPooling2.OutputShape.TotalSize(), 250))
 	m.Add(&activation.Activation_ReLU{})
 
 	m.Add((&layer.DenseLayer{}).Initialization(250, 125))
@@ -196,17 +215,17 @@ func trainModeAndStore(m *model.Model, path string, epochs int) error {
 // so the idea that since current model training runs in one thread I can spawn several
 // models to train all at once. and then compare results
 func TrainModels() {
-	// ds := dataset.FashionMNISTDataset{}
-	// x, _, err := ds.TrainingDataset()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// _, numInputs := x.Dims()
+	ds := dataset.FashionMNISTDataset{}
+	x, _, err := ds.TrainingDataset()
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, numInputs := x.Dims()
 
-	// trainModeAndStore(createDenseModel(numInputs), "./assets/fashion-dense.json", 10)
-	// trainModeAndStore(createCNNOneLayerModel(), "./assets/fashion-cnn-1.json", 30)
-	trainModeAndStore(createCNNWithMaxPoolingLayerModel(), "./assets/fashion-cnn-max-pooling.json", 10)
-	// trainModeAndStore(createCNNTwoLayerModel(), "./assets/fashion-cnn-2.json", 30)
+	trainModeAndStore(createDenseModel(numInputs), "./assets/fashion-dense.json", 10)
+	trainModeAndStore(createCNNOneLayerModel(), "./assets/fashion-cnn-1.json", 30)
+	trainModeAndStore(createCNNWithMaxPoolingLayerModel(), "./assets/fashion-cnn-max-pooling.json", 30)
+	trainModeAndStore(createCNNTwoLayerModel(), "./assets/fashion-cnn-2.json", 30)
 	// trainModeAndStore(createCNNBigModel(), "./assets/fashion-cnn-big.json", 20)
 
 	fmt.Println("training is done")

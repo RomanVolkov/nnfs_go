@@ -60,7 +60,6 @@ func (value ConvolutionWrapper) MarshalJSON() ([]byte, error) {
 }
 
 func (value *ConvolutionWrapper) UnmarshalJSON(data []byte) error {
-
 	wrap := struct {
 		Type string                 `json:"type"`
 		Data convolutionWrapperData `json:"data"`

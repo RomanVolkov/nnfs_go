@@ -37,6 +37,7 @@ func (provider *JSONModelDataProvider) Store(path string, model *Model) error {
 		var softmax *activation.SoftmaxActivation = &activation.SoftmaxActivation{}
 		var sigmoid *activation.SigmoidActivation = &activation.SigmoidActivation{}
 		var convolution *layer.ConvolutionLayer = &layer.ConvolutionLayer{}
+		var maxPooling *layer.MaxPoolingLayer = &layer.MaxPoolingLayer{}
 
 		if reflect.TypeOf(item).String() == reflect.TypeOf(l).String() {
 			l, _ := item.(*layer.DenseLayer)
@@ -65,6 +66,9 @@ func (provider *JSONModelDataProvider) Store(path string, model *Model) error {
 				Type: reflect.TypeOf(item).String(),
 			}
 			layersWraps = append(layersWraps, v)
+		} else if reflect.TypeOf(item).String() == reflect.TypeOf(maxPooling).String() {
+			maxPoolingLayer, _ := item.(*layer.MaxPoolingLayer)
+			layersWraps = append(layersWraps, marshaling.MaxPoolingWrapper{MaxPoolingLayer: *maxPoolingLayer})
 		} else {
 			log.Fatalf("Unknown type: %v", reflect.TypeOf(item).String())
 		}
@@ -137,6 +141,8 @@ func (provider *JSONModelDataProvider) Load(path string) (*Model, error) {
 					layer.LoadFromParams(&layerWrap.Weights, &layerWrap.Biases, layerWrap.L1, layerWrap.L2)
 					m.Add(&layer)
 				}
+
+				// decode layer.ConvolutionLayer
 				if layerData["type"] == reflect.TypeOf(layer.ConvolutionLayer{}).String() {
 					layerWrap := marshaling.ConvolutionWrapper{}
 					bd, err := json.Marshal(l)
@@ -149,6 +155,20 @@ func (provider *JSONModelDataProvider) Load(path string) (*Model, error) {
 					m.Add(&layer)
 				}
 				// decode activation.Activation_ReLU
+
+				// decode layer.MaxPoolingLayer
+				if layerData["type"] == reflect.TypeOf(layer.MaxPoolingLayer{}).String() {
+					layerWrap := marshaling.MaxPoolingWrapper{}
+					bd, err := json.Marshal(l)
+					if err != nil {
+						return nil, err
+					}
+					err = json.Unmarshal(bd, &layerWrap)
+					layer := layer.MaxPoolingLayer{}
+					layer.LoadFromParams(layerWrap.PoolSize, layerWrap.InputShape, layerWrap.OutputShape)
+					m.Add(&layer)
+				}
+
 				var relu *activation.Activation_ReLU = &activation.Activation_ReLU{}
 				if layerData["type"] == reflect.TypeOf(relu).String() {
 					a := activation.Activation_ReLU{}
