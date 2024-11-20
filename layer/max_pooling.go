@@ -31,7 +31,7 @@ func (layer *MaxPoolingLayer) Initialization(inputShape InputShape, poolSize int
 	layer.OutputShape = InputShape{
 		Depths: inputShape.Depths,
 		Width:  inputShape.Width / poolSize,
-		Height: inputShape.Height / 2,
+		Height: inputShape.Height / poolSize,
 	}
 
 	return layer
